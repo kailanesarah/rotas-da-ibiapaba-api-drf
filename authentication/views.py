@@ -1,11 +1,10 @@
-from django.shortcuts import render
+from django.views import View
+from django.http import HttpResponse
 
-# Create your views here.
+class LoginView(View):
+    def get(self, request):
+        return HttpResponse("Página de login")
 
-class LoginView():
-    pass
- 
-class LogoutView():
-    pass
-
-
+class LogoutView(View):
+    def get(self, request):
+        return HttpResponse("Logout efetuado")
