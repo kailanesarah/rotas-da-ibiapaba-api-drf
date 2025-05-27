@@ -8,7 +8,7 @@
 	},
 	"item": [
 		{
-			"name": "New Request",
+			"name": "ListUsers",
 			"request": {
 				"method": "GET",
 				"header": []
@@ -16,7 +16,7 @@
 			"response": []
 		},
 		{
-			"name": "http://127.0.0.1:8000/api/v1/accounts/auth/register/",
+			"name": "CreateUser",
 			"request": {
 				"auth": {
 					"type": "noauth"
@@ -51,6 +51,30 @@
 						""
 					]
 				}
+			},
+			"response": []
+		},
+		{
+			"name": "LoginUser",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "LogoutUser",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "RefreshToken",
+			"request": {
+				"method": "GET",
+				"header": []
 			},
 			"response": []
 		}
