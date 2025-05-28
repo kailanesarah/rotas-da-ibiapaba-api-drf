@@ -31,7 +31,8 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 |--------|----------------------------------------|-------------------------------------------------------|
 | POST   | `/api/v1/authentication/login/`        | Realiza login, retorna tokens JWT (access + refresh)  |
 | POST   | `/api/v1/authentication/logout/`       | Realiza logout, blacklist do refresh token            |
-| POST   | `/api/v1/authentication/api/token/refresh/` | Renova o access token usando o refresh token          |
+| POST   | `/api/v1/authentication/api/token/refresh/` | Renova o access token usando o refresh token     |
+| POST   | `/api/v1/authentication/verifyCode`    | Faz a validação do código enviado por email
 
 ### Rotas de usuários (`accounts` app)
 
@@ -87,6 +88,8 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 - Utilize o Postman, Insomnia ou outra ferramenta para fazer requisições HTTP.
 
 - Para login, envie um POST para /api/v1/authentication/login/ com usuário e senha.
+  
+- - Para validar o token, confira o codigo enviado por email para a conta disponibilizada
 
 - Para renovar o token, envie um POST para /api/v1/authentication/api/token/refresh/ com o refresh token no corpo.
 
