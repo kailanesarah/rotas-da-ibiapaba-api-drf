@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from accounts.models import Category, Location, User, Establishment
-from accounts.utils import RelatedFieldExtractorAdmin
+from app.utils import RelatedFieldExtractorAdmin
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

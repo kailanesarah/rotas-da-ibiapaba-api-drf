@@ -58,8 +58,10 @@ class User(AbstractUser):
 
     type = models.CharField(max_length=20, choices=TYPES_USER)
     email = models.EmailField(unique=True)
-    USERNAME_FIELD = 'email' #campo que será utilizado no login
-    REQUIRED_FIELDS = ['username'] #o django vai pedir isso tbm, já que é o apelido do usuario
+    has_mfa = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email' 
+    REQUIRED_FIELDS = ['username'] 
 
     objects = CustomUserManager()
 
