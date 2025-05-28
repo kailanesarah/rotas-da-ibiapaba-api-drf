@@ -38,7 +38,7 @@ class EstablishmentAdmin(admin.ModelAdmin):
         extractor = RelatedFieldExtractorAdmin() 
         return extractor.get_field(obj, 'category') 
 
-    list_display = ('id', 'name', 'CNPJ', 'email', 'whatsapp', 'user', 'location', 'get_category')
+    list_display = ('id', 'name', 'CNPJ',  'whatsapp', 'user', 'location', 'get_category')
     search_fields = ('name', 'email', 'CNPJ')
     list_filter = ('user__type',)
 

@@ -35,7 +35,7 @@ class EstablishementSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     location = LocationSerializer()
     category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), many=True)  # lista com ids de categoria
+        queryset=Category.objects.all(), many=True)  
 
     class Meta:
         model = Establishment
@@ -57,7 +57,7 @@ class EstablishementSerializer(serializers.ModelSerializer):
             location=location,
             **validated_data
         )
-        # Associa categorias via ids usando set()
+      
         establishment.category.set(category_ids)
 
         return establishment
