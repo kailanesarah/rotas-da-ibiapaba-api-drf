@@ -73,7 +73,6 @@ class Establishment(models.Model):
     name = models.CharField(max_length=100)
     CNPJ = models.CharField(max_length=14)
     whatsapp = models.BigIntegerField()  # para números maiores que IntegerField
-    email = models.EmailField()
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='establishment_location')
     category = models.ManyToManyField(Category, related_name='establishments_category')  
 
