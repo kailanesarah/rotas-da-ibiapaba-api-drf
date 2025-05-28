@@ -14,6 +14,9 @@ media/
 staticfiles/
 local_settings.py
 
+# Ignorar variáveis secretas
+.env
+
 # Virtual environments
 venv/
 env/
