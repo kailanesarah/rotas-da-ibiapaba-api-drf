@@ -58,8 +58,10 @@ class User(AbstractUser):
 
     type = models.CharField(max_length=20, choices=TYPES_USER)
     email = models.EmailField(unique=True)
-    USERNAME_FIELD = 'email' #campo que será utilizado no login
-    REQUIRED_FIELDS = ['username'] #o django vai pedir isso tbm, já que é o apelido do usuario
+    has_mfa = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email' 
+    REQUIRED_FIELDS = ['username'] 
 
     objects = CustomUserManager()
 
@@ -71,7 +73,6 @@ class Establishment(models.Model):
     name = models.CharField(max_length=100)
     CNPJ = models.CharField(max_length=14)
     whatsapp = models.BigIntegerField()  # para números maiores que IntegerField
-    email = models.EmailField()
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='establishment_location')
     category = models.ManyToManyField(Category, related_name='establishments_category')  
 

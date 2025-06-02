@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from accounts.models import Category, Location, User, Establishment
-from accounts.utils import RelatedFieldExtractorAdmin
+from app.utils import RelatedFieldExtractorAdmin
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -38,7 +38,7 @@ class EstablishmentAdmin(admin.ModelAdmin):
         extractor = RelatedFieldExtractorAdmin() 
         return extractor.get_field(obj, 'category') 
 
-    list_display = ('id', 'name', 'CNPJ', 'email', 'whatsapp', 'user', 'location', 'get_category')
+    list_display = ('id', 'name', 'CNPJ',  'whatsapp', 'user', 'location', 'get_category')
     search_fields = ('name', 'email', 'CNPJ')
     list_filter = ('user__type',)
 
