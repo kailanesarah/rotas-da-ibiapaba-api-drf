@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from django.conf import settings
 import pyotp
 
 class RelatedFieldExtractorAdmin:
@@ -56,6 +57,20 @@ class AuthenticationMethods:
             to=[user_email]
         )
         email.send()
+        
+        
+    def create_cookie(self, response, key_cookie, value_cookie, max_age_cookie):
+        response.set_cookie(
+            key=key_cookie,
+            value=value_cookie,
+            httponly=True,
+            secure=not settings.DEBUG,         # só em produção com HTTPS
+            samesite='Lax',
+            max_age= max_age_cookie , 
+            path='/'
+        )
+        
+        return response
 
     
     
