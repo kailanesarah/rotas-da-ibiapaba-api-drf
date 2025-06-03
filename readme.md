@@ -7,9 +7,8 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 ## Funcionalidades implementadas até agora
 
 - Registro de usuários (estabelecimentos)
-- Login via JWT (obtenção de access token e refresh token)
-- Renovação de access token via refresh token
-- Logout com blacklist do refresh token
+- Login via cookies JWT 
+- Reset para que o usuario consiga um novo acesso
 
 ---
 
@@ -31,6 +30,7 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 |--------|----------------------------------------|-------------------------------------------------------|
 | POST   | `/api/v1/authentication/login/`        | Realiza login, retorna tokens JWT (access + refresh)  |
 | POST   | `/api/v1/authentication/logout/`       | Realiza logout, blacklist do refresh token            |
+| POST   | `/api/v1/authentication/verifyCode/` | Verifica codigo enviado por email         |
 | POST   | `/api/v1/authentication/api/token/refresh/` | Renova o access token usando o refresh token     |
 | POST   | `/api/v1/authentication/verifyCode`    | Faz a validação do código enviado por email
 
@@ -40,6 +40,7 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 |--------|-------------------------------|-------------------------------|
 | POST   | `/api/v1/accounts/auth/register/` | Registro de novo estabelecimento |
 | GET    | `/api/v1/accounts/auth/list/`     | Listar estabelecimentos registrados |
+
 
 ---
 

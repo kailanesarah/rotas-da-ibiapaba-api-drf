@@ -1,10 +1,11 @@
-from django.contrib.auth import authenticate, logout, login
+from django.contrib.auth import logout, login
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND,HTTP_500_INTERNAL_SERVER_ERROR
+from rest_framework.permissions import IsAuthenticated
 from app.utils import AuthenticationMethods
 from accounts.models import User
+from authentication.authentication import CookieJWTAuthentication
 
 
 class CodeValidatorView(APIView):
@@ -12,32 +13,57 @@ class CodeValidatorView(APIView):
     def post(self, request):
         try:
             auth_methods = AuthenticationMethods()
-            email_user = self.request.data.get('email')
-            code_user = self.request.data.get('code')
+            
+            email_user = request.data.get('email')
+            code_user = request.data.get('code')
 
-            response = auth_methods.verify_code(code_user, email_user)
-
-            if response == 0:
-                return Response({'error': 'Código incorreto, tente novamente'}, status=401)
-
+            # Verifica código
+            code_verification_result = auth_methods.verify_code(code_user, email_user)
+            if code_verification_result == 0:
+                return Response(
+                {'error': 'Código incorreto, tente novamente'}, 
+                status=HTTP_401_UNAUTHORIZED
+                )
+                
+            # Busca usuário
             try:
                 user = User.objects.get(email=email_user)
             except User.DoesNotExist:
-                return Response({'error': 'Usuário não encontrado'}, status=404)
+                return Response(
+                    {'error': 'Usuário não encontrado'}, 
+                    status=HTTP_404_NOT_FOUND)
 
-            tokens = auth_methods.get_token(user)
+            try:
+                # Gera tokens
+                tokens = auth_methods.get_token(user)
+                access_token = tokens['access']
+                refresh_token = tokens['refresh']
 
-            return Response({
-            'success': 'Código verificado com sucesso',
-            'tokens': tokens,
-            'user': {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email
-            }
-            }, status=200)
+                # Prepara resposta
+                response = Response({
+                    'success': 'Código verificado com sucesso',
+                    'user_id': user.id,
+                    'email': user.email
+                }, status=HTTP_200_OK)
+
+                # Cria cookies para os tokens
+                auth_methods.create_cookie(response, 'access_token', access_token, 3* 4)  # 15 min
+                auth_methods.create_cookie(response, 'refresh_token', refresh_token, 7 * 24 * 60 * 60)  # 7 dias
+
+                return response
+
+            except KeyError as e:
+                # Caso algum token não esteja na resposta
+                return Response(
+                    {'error': f'Token não encontrado na resposta: {str(e)}'},
+                    status=HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
         except Exception as e:
-            return Response({'error': 'Erro na tentativa de validar o codigo', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': 'Erro na tentativa de validar o codigo', 
+                'detail': str(e)
+                }, status=HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -64,14 +90,19 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication] 
+    
     def post(self, request):
         try:
-            refresh_token = request.data.get('refresh')
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            logout(request)
-
-            return Response({'success': 'Logout realizado com sucesso'}, status=HTTP_200_OK)
-
+            #Prepara response
+            response = Response({'success': 'Logout realizado com sucesso'}, status=HTTP_200_OK)
+            
+            # Deleta os cookies do token
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            logout(request)  
+            
+            return response  
         except Exception as e:
             return Response({'error': 'Erro ao fazer logout', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
