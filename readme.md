@@ -39,13 +39,14 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 
 ### Rotas de autenticação (`authentication` app)
 
-| Método | Endpoint                                | Descrição                                             |
-|--------|----------------------------------------|-------------------------------------------------------|
-| POST   | `/api/v1/authentication/login/`        | Realiza login, retorna tokens JWT (access+refresh)  |
-| POST   | `/api/v1/authentication/logout/`       | Realiza logout token            |
-| POST   | `/api/v1/authentication/verifyCode/` | Verifica codigo enviado por email         |
-| POST  | `/api/v1/authentication/reset_password/` | Envia o link com os dados de reset para o email do usuário         |
-| PATCH   | `/api/v1/authentication/reset_confirm_password/` | Reseta a senha do usuário         |
+| Método | Endpoint                                             | Descrição                                                             |
+|--------|------------------------------------------------------|----------------------------------------------------------------------|
+| POST   | `/api/v1/authentication/login/`                      | Realiza login, retorna tokens JWT (access + refresh)                |
+| POST   | `/api/v1/authentication/logout/`                     | Realiza logout, blacklist do refresh token                           |
+| POST   | `/api/v1/authentication/verifyCode/`                 | Verifica código enviado por email                                    |
+| POST   | `/api/v1/authentication/reset_password/`             | Envia o link com os dados de reset para o email do usuário          |
+| PATCH  | `/api/v1/authentication/reset_confirm_password/`     | Reseta a senha do usuário                                            |
+| POST   | `/api/v1/authentication/api/token/refresh/`          | Renova o access token usando o refresh token                         |
 ### Rotas de usuários (`accounts` app)
 
 | Método | Endpoint                       | Descrição                      |
@@ -108,17 +109,16 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 ```
 ---
 
-## Testando a API
-Você pode testar a API usando ferramentas como Postman, Insomnia ou qualquer cliente HTTP de sua preferência.
-
 ### Arquivo Postman
 Para facilitar, disponibilizamos um arquivo Postman com todas as requisições configuradas, incluindo os dados dos corpos (body). Importe esse arquivo na sua ferramenta para começar a testar rapidamente.
 
 ## Observações importantes sobre autenticação e logout
-
 - Os tokens JWT são enviados e armazenados via cookies HTTP-only para segurança.  
 - Após a validação do código, as rotas serão autenticadas via cookies  
 - O access token tem validade curta para proteger o sistema contra acessos não autorizados.  
 - O refresh token é usado para renovar o access token sem que o usuário precise logar novamente.  
 - No logout, os cookies contendo os tokens são removidos, mas os tokens não são invalidados no servidor e continuam válidos até expirarem.  
 - Para implementar invalidação imediata de tokens, seria necessário um mecanismo de blacklist, que não está presente nesta versão da API.
+
+- Este é apenas o começo do projeto, outras funcionalidades como autorização, permissões específicas e testes serão implementadas em breve.
+

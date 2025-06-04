@@ -35,10 +35,11 @@ class EstablishementSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     location = LocationSerializer()
     category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), many=True)
-
+        queryset=Category.objects.all(), many=True
+    )
     categories = CategorySerializer(
-        many=True, read_only=True, source='category')
+        many=True, read_only=True, source='category'
+    )
 
     class Meta:
         model = Establishment
