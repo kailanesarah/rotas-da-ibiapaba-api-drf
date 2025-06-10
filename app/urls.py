@@ -13,6 +13,5 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
 ]
 
-# Serve arquivos estáticos durante o desenvolvimento
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
