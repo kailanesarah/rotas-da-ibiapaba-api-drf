@@ -1,9 +1,8 @@
-from django.contrib import admin
-from django.urls import path,include
+from django.urls import path
 from accounts.views import EstablishmentListCreateView
 
 urlpatterns = [
-    path('auth/register/', EstablishmentListCreateView.as_view(), name="establishment_List_Create_View"),
-    path('auth/list/', EstablishmentListCreateView.as_view(), name="establishment_List_Create_View"),
+    path('register/', EstablishmentListCreateView.as_view(), name="establishment_Create_View"),
+    path('list/', EstablishmentListCreateView.as_view(), name="establishment_List_View"),
 ]
 
