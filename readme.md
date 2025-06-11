@@ -54,8 +54,16 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 | POST   | `/api/v1/accounts/register/` | Registro de novo estabelecimento |
 | GET    | `/api/v1/accounts/list/`     | Listar estabelecimentos registrados |
 
+---
+### Rotas de categorias (`categories` app)
+
+| Método | Endpoint                       | Descrição                      |
+|--------|-------------------------------|-------------------------------|
+| POST   | `/api/v1/categories/register/` | Registro de nova categoria |
+| GET    | `/api/v1/categories/list/`     | Listar categorias registradas |
 
 ---
+
 
 ## Como rodar a aplicação
 

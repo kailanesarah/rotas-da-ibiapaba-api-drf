@@ -37,6 +37,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'authentication',
+    'categories',
 
     'rest_framework',
     'corsheaders',

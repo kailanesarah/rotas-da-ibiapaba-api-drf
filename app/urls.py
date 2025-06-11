@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import permissions
 from django.conf import settings
 from django.conf.urls.static import static
 from app.views import health_check
@@ -10,6 +9,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('api/v1/authentication/', include('authentication.urls')),
     path('api/v1/accounts/', include('accounts.urls')),
+    path('api/v1/categories/', include('categories.urls')),
     path('health/', health_check, name='health_check'),
 ]
 

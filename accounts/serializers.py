@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from accounts.models import Category, Location, Establishment, User
-
+from accounts.models import Location, Establishment, User
+from categories.models import Category
+from categories.serializers import CategorySerializer
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,12 +18,6 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = '__all__'
 
 
 class LocationSerializer(serializers.ModelSerializer):
