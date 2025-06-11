@@ -90,7 +90,7 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 
 - Para login, envie um POST para /api/v1/authentication/login/ com usuário e senha.
   
-- - Para validar o token, confira o codigo enviado por email para a conta disponibilizada
+- Para validar o token, confira o codigo enviado por email para a conta disponibilizada
 
 - Para renovar o token, envie um POST para /api/v1/authentication/api/token/refresh/ com o refresh token no corpo.
 
