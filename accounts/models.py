@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from categories.models import Category
 
 STATE_CHOICES = (
     ('CE', 'Ceará'),
@@ -8,14 +9,6 @@ STATE_CHOICES = (
     ('BA', 'Bahia'),
 
 )
-
-class Category(models.Model):
-    name = models.CharField(max_length=30)
-
-    def __str__(self):
-        return self.name
-
-
 class Location(models.Model):
     country = models.CharField(max_length=100)
     state = models.CharField(choices=STATE_CHOICES, max_length=3)
