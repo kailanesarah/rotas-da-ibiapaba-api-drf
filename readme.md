@@ -107,7 +107,16 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 ```bash
     python manage.py runserver
 ```
----
+
+## Testando a API
+
+- Utilize o Postman, Insomnia ou outra ferramenta para fazer requisições HTTP.
+
+- Para login, envie um POST para /api/v1/authentication/login/ com usuário e senha.
+  
+- Para validar o token, confira o codigo enviado por email para a conta disponibilizada
+
+- Para renovar o token, envie um POST para /api/v1/authentication/api/token/refresh/ com o refresh token no corpo.
 
 ### Arquivo Postman
 Para facilitar, disponibilizamos um arquivo Postman com todas as requisições configuradas, incluindo os dados dos corpos (body). Importe esse arquivo na sua ferramenta para começar a testar rapidamente.
@@ -119,6 +128,5 @@ Para facilitar, disponibilizamos um arquivo Postman com todas as requisições c
 - O refresh token é usado para renovar o access token sem que o usuário precise logar novamente.  
 - No logout, os cookies contendo os tokens são removidos, mas os tokens não são invalidados no servidor e continuam válidos até expirarem.  
 - Para implementar invalidação imediata de tokens, seria necessário um mecanismo de blacklist, que não está presente nesta versão da API.
-
 - Este é apenas o começo do projeto, outras funcionalidades como autorização, permissões específicas e testes serão implementadas em breve.
 
