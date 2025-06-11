@@ -35,9 +35,11 @@ class EstablishementSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     location = LocationSerializer()
     category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), many=True)  
-    
-    categories = CategorySerializer(many=True, read_only=True, source='category')
+        queryset=Category.objects.all(), many=True
+    )
+    categories = CategorySerializer(
+        many=True, read_only=True, source='category'
+    )
 
     class Meta:
         model = Establishment
@@ -59,7 +61,7 @@ class EstablishementSerializer(serializers.ModelSerializer):
             location=location,
             **validated_data
         )
-      
+
         establishment.category.set(category_ids)
 
         return establishment
