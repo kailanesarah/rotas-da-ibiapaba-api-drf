@@ -17,7 +17,7 @@ SECRET_KEY = 'django-insecure-r7f4fs%kd^e(g45g62l=)3sqvavo&pp*t#izy5ds9fkmobgi=(
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = [
-    "127.0.0.1:8000"
+    "127.0.0.1:8000",
     "localhost",
     "127.0.0.1",
     "rotas-da-ibiapaba-frontend.vercel.app",
