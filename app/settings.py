@@ -16,12 +16,11 @@ SECRET_KEY = 'django-insecure-r7f4fs%kd^e(g45g62l=)3sqvavo&pp*t#izy5ds9fkmobgi=(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = [
-    "127.0.0.1:8000",
-    "localhost",
-    "127.0.0.1",
-    "rotas-da-ibiapaba-frontend.vercel.app",
-    "rotas-da-ibiapaba-api.onrender.com",
+
+# CORS (ex: permitir acesso local do frontend)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1",
 ]
 
 
@@ -47,15 +46,16 @@ INSTALLED_APPS = [
 
 ]
 
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -141,10 +141,11 @@ REST_FRAMEWORK = {
     # ),
 }
 
-# CORS (ex: permitir acesso local do frontend)
-CORS_ALLOWED_ORIGINS = [
-    "http://rotas-da-ibiapaba-frontend.vercel.app",  # seu front em HTTP
-]
+
+CSRF_COOKIE_SAMESITE = None 
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SECURE = False
 
 CORS_ALLOW_CREDENTIALS = True
 
