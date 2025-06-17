@@ -37,6 +37,7 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
 
         if not password:
             raise ValueError('A senha é obrigatória')
@@ -47,6 +48,7 @@ class User(AbstractUser):
     TYPES_USER = [
         ('establishment', 'establishment'),
         ('manager', 'manager'),
+        ('admin', 'admin'),
     ]
 
     type = models.CharField(max_length=20, choices=TYPES_USER)

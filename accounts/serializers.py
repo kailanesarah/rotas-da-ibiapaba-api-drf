@@ -3,7 +3,25 @@ from accounts.models import Location, Establishment, User
 from categories.models import Category
 from categories.serializers import CategorySerializer
 
-class UserSerializer(serializers.ModelSerializer):
+
+class AdminCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        filelds = fields = ['id', 'email', 'username', 'password', 'type']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+
+        user = User.objects.create_superuser(
+                username=validated_data['username'],
+                email=validated_data['email'],
+                password=validated_data['password'],
+                type=validated_data['type']  # <-- importante!
+        )
+       
+        return user
+
+class EstablishmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'username', 'password', 'type']
@@ -14,20 +32,20 @@ class UserSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             username=validated_data['username'],
             type=validated_data['type'],  # <-- importante!
+            is_staff=False,
+            is_superuser=False
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
-
-
+    
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = '__all__'
-
-
+        
 class EstablishementSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = EstablishmentCreateSerializer()
     location = LocationSerializer()
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), many=True
@@ -48,8 +66,8 @@ class EstablishementSerializer(serializers.ModelSerializer):
         if not isinstance(category_ids, list):
             category_ids = [category_ids]
 
-        user = UserSerializer.create(
-            UserSerializer(), validated_data=user_data)
+        user = EstablishmentCreateSerializer.create(
+            EstablishmentCreateSerializer(), validated_data=user_data)
         location = Location.objects.create(**location_data)
         establishment = Establishment.objects.create(
             user=user,
