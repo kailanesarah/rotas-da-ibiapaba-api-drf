@@ -1,11 +1,11 @@
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.generics import ListCreateAPIView
-from accounts.models import Establishment
-from accounts.serializers import EstablishementSerializer
+from accounts.models import Establishment, User
+from accounts.serializers import EstablishementSerializer, AdminCreateSerializer
 from authentication.authentication import CookieJWTAuthentication
 
-
+    
 class EstablishmentListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated, )
     queryset = Establishment.objects.all()
@@ -46,3 +46,14 @@ class EstablishmentListCreateView(ListCreateAPIView):
             "status": 201,
             "data": serializer.data
         })
+        
+class AdminListCreateView(ListCreateAPIView):
+    permission_classes = (IsAuthenticated, )
+    queryset = User.objects.filter(type='admin')
+    serializer_class = AdminCreateSerializer
+    authentication_classes = [CookieJWTAuthentication]
+    
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [AllowAny()]
+        return [IsAuthenticated()]
