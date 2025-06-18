@@ -59,8 +59,8 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 
 | Método | Endpoint                       | Descrição                      |
 |--------|-------------------------------|-------------------------------|
-| POST   | `/api/v1/categories/` | Registro de nova categoria |
-| GET    | `/api/v1/categories/`     | Listar categorias registradas |
+| POST   | `/api/v1/categories/categorie/` | Registro de nova categoria |
+| GET    | `/api/v1/categories/categorie/`     | Listar categorias registradas |
 
 ---
 
