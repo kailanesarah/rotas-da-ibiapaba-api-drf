@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from accounts.models import Category, Location, Establishment, User
+from accounts.models import Location, Establishment, User
+from categories.models import Category
 from categories.serializers import CategorySerializer
 
 class UserSerializer(serializers.ModelSerializer):
