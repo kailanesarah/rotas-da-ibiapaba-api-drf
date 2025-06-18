@@ -1,8 +1,9 @@
 from django.urls import path
-from accounts.views import EstablishmentListCreateView
+from accounts.views import EstablishmentListCreateView, AdminListCreateView
 
 urlpatterns = [
-    path('register/', EstablishmentListCreateView.as_view(), name="establishment_Create_View"),
-    path('list/', EstablishmentListCreateView.as_view(), name="establishment_List_View"),
+    path('establishment/', EstablishmentListCreateView.as_view(), name="establishment_Create_View"),
+    path('establishment/', EstablishmentListCreateView.as_view(), name="establishment_List_View"),
+    path('admin/', AdminListCreateView.as_view(), name='create_admin')
 ]
 
