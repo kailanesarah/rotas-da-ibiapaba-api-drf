@@ -51,16 +51,16 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 
 | Método | Endpoint                       | Descrição                      |
 |--------|-------------------------------|-------------------------------|
-| POST   | `/api/v1/accounts/register/` | Registro de novo estabelecimento |
-| GET    | `/api/v1/accounts/list/`     | Listar estabelecimentos registrados |
-
+| POST   | `/api/v1/accounts/establishment/` | Registro de novo estabelecimento |
+| GET    | `/api/v1/accounts/establishment/`     | Listar estabelecimentos registrados |
+| POST    | `/api/v1/accounts/admin/`     | Criar novo admin|
 ---
 ### Rotas de categorias (`categories` app)
 
 | Método | Endpoint                       | Descrição                      |
 |--------|-------------------------------|-------------------------------|
-| POST   | `/api/v1/categories/register/` | Registro de nova categoria |
-| GET    | `/api/v1/categories/list/`     | Listar categorias registradas |
+| POST   | `/api/v1/categories/` | Registro de nova categoria |
+| GET    | `/api/v1/categories/`     | Listar categorias registradas |
 
 ---
 
@@ -97,6 +97,7 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 4. Faça as migrações do banco de dados:
 
 ```bash
+    python manage.py makemigrations
     python manage.py migrate
 ```
 
