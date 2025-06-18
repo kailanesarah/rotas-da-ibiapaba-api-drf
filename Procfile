@@ -1,1 +1,1 @@
-web: gunicorn rotas-da-ibiapaba-api.wsgi:application 
+web: gunicorn app.wsgi:application 
