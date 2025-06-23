@@ -184,3 +184,32 @@ class PasswordResetConfirmView(APIView):
             return Response({'message': f'Senha redefinida com sucesso para o usuário: {email}'}, status=HTTP_200_OK)
         except Exception as e:
             return Response({'error': 'Erro ao processar a requisição', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
+
+
+class ResendCodeView(APIView):
+    def post(self, request):
+        try:
+            email_user = request.data.get('email')
+            user = verification_service.get_user_by_email(email_user)
+
+            code = verification_service.generate_code()
+            verification_service.save_code(code, user.email)
+                
+            subject = "NexTech: Seu novo código chegou!"
+            body = (
+                    f"Olá novamente!\n\n"
+                    "Conforme solicitado, aqui está um novo código de acesso para que você possa entrar no *Rotas da Ibiapaba* e continuar explorando o melhor da nossa região!\n\n"
+                    f"*Seu novo código de acesso:* {code}\n\n"
+                    "Caso não tenha solicitado este código, basta ignorar esta mensagem.\n\n"
+                    "Se precisar de ajuda, conte com a gente!\n\n"
+                    "Atenciosamente,\n"
+                    "Equipe Rotas da Ibiapaba "
+                )
+                
+            email_service.send_email(subject, body, user.email)
+
+            return Response({'message': f'Código reenviado com sucesso para o usuário: {email_user}'}, status=HTTP_200_OK)
+        
+        except Exception as e:
+            
+            return Response({'error': 'Erro ao processar a requisição', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
