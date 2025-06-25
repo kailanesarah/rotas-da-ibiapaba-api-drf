@@ -44,7 +44,7 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 | POST   | `/api/v1/authentication/login/`                      | Realiza login, retorna tokens JWT (access + refresh)                 |
 | POST   | `/api/v1/authentication/logout/`                     | Realiza logout, blacklist do refresh token                           |
 | POST   | `/api/v1/authentication/verifyCode/`                 | Verifica código enviado por email para fazer o login                 |
-| POST   | `/api/v1/authentication/api/resend_code/`            | Reenvia o código de recuperação de senha                               |
+| POST   | `/api/v1/authentication/resend_code/`            | Reenvia o código de recuperação de senha                               |
 | POST   | `/api/v1/authentication/reset_password/`             | Envia o link com os dados de reset para o email do usuário           |
 | PATCH  | `/api/v1/authentication/reset_confirm_password/`     | Reseta a senha do usuário                                            |
 
