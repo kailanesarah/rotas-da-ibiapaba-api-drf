@@ -39,21 +39,22 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 
 ### Rotas de autenticação (`authentication` app)
 
-| Método | Endpoint                                             | Descrição                                                             |
+| Método | Endpoint                                             | Descrição                                                            |
 |--------|------------------------------------------------------|----------------------------------------------------------------------|
-| POST   | `/api/v1/authentication/login/`                      | Realiza login, retorna tokens JWT (access + refresh)                |
+| POST   | `/api/v1/authentication/login/`                      | Realiza login, retorna tokens JWT (access + refresh)                 |
 | POST   | `/api/v1/authentication/logout/`                     | Realiza logout, blacklist do refresh token                           |
-| POST   | `/api/v1/authentication/verifyCode/`                 | Verifica código enviado por email                                    |
-| POST   | `/api/v1/authentication/reset_password/`             | Envia o link com os dados de reset para o email do usuário          |
+| POST   | `/api/v1/authentication/verifyCode/`                 | Verifica código enviado por email para fazer o login                 |
+| POST   | `/api/v1/authentication/api/resend_code/`            | Reenvia o código de recuperação de senha                               |
+| POST   | `/api/v1/authentication/reset_password/`             | Envia o link com os dados de reset para o email do usuário           |
 | PATCH  | `/api/v1/authentication/reset_confirm_password/`     | Reseta a senha do usuário                                            |
-| POST   | `/api/v1/authentication/api/token/refresh/`          | Renova o access token usando o refresh token                         |
+
 ### Rotas de usuários (`accounts` app)
 
-| Método | Endpoint                       | Descrição                      |
-|--------|-------------------------------|-------------------------------|
-| POST   | `/api/v1/accounts/establishment/` | Registro de novo estabelecimento |
-| GET    | `/api/v1/accounts/establishment/`     | Listar estabelecimentos registrados |
-| POST    | `/api/v1/accounts/admin/`     | Criar novo admin|
+| Método | Endpoint                          | Descrição                          |
+|--------|-----------------------------------|------------------------------------|
+| POST   | `/api/v1/accounts/establishment/` | Registro de novo estabelecimento   |
+| GET    | `/api/v1/accounts/establishment/` | Listar estabelecimentos registrados|
+| POST   | `/api/v1/accounts/admin/`         | Criar novo admin|
 ---
 ### Rotas de categorias (`categories` app)
 
