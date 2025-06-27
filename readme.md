@@ -5,6 +5,7 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 ---
 
 ## Funcionalidades
+
 - Registro de usuários (estabelecimentos)
 - Login via JWT com cookies
 - Reset e redefinição de senha
@@ -25,13 +26,14 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 ---
 
 ## Pré-requisitos
+
 - Python 3.8 ou superior
 - Pip instalado
 - Ambiente virtual (recomendado)
 - Variáveis de ambiente necessárias
-    - EMAIL_HOST_USER
-    - EMAIL_HOST_PASSWORD
-    - BASE_URL
+  - EMAIL_HOST_USER
+  - EMAIL_HOST_PASSWORD
+  - BASE_URL
 
 ---
 
@@ -39,32 +41,33 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 
 ### Rotas de autenticação (`authentication` app)
 
-| Método | Endpoint                                             | Descrição                                                            |
-|--------|------------------------------------------------------|----------------------------------------------------------------------|
-| POST   | `/api/v1/authentication/login/`                      | Realiza login, retorna tokens JWT (access + refresh)                 |
-| POST   | `/api/v1/authentication/logout/`                     | Realiza logout, blacklist do refresh token                           |
-| POST   | `/api/v1/authentication/verifyCode/`                 | Verifica código enviado por email para fazer o login                 |
-| POST   | `/api/v1/authentication/resend_code/`            | Reenvia o código de recuperação de senha                               |
-| POST   | `/api/v1/authentication/reset_password/`             | Envia o link com os dados de reset para o email do usuário           |
-| PATCH  | `/api/v1/authentication/reset_confirm_password/`     | Reseta a senha do usuário                                            |
+| Método | Endpoint                                         | Descrição                                                  |
+| ------ | ------------------------------------------------ | ---------------------------------------------------------- |
+| POST   | `/api/v1/authentication/login/`                  | Realiza login, retorna tokens JWT (access + refresh)       |
+| POST   | `/api/v1/authentication/logout/`                 | Realiza logout, blacklist do refresh token                 |
+| POST   | `/api/v1/authentication/verifyCode/`             | Verifica código enviado por email para fazer o login       |
+| POST   | `/api/v1/authentication/resend_code/`            | Reenvia o código de recuperação de senha                   |
+| POST   | `/api/v1/authentication/reset_password/`         | Envia o link com os dados de reset para o email do usuário |
+| PATCH  | `/api/v1/authentication/reset_confirm_password/` | Reseta a senha do usuário                                  |
 
 ### Rotas de usuários (`accounts` app)
 
-| Método | Endpoint                          | Descrição                          |
-|--------|-----------------------------------|------------------------------------|
-| POST   | `/api/v1/accounts/establishment/` | Registro de novo estabelecimento   |
-| GET    | `/api/v1/accounts/establishment/` | Listar estabelecimentos registrados|
-| POST   | `/api/v1/accounts/admin/`         | Criar novo admin|
+| Método | Endpoint                          | Descrição                           |
+| ------ | --------------------------------- | ----------------------------------- |
+| POST   | `/api/v1/accounts/establishment/` | Registro de novo estabelecimento    |
+| GET    | `/api/v1/accounts/establishment/` | Listar estabelecimentos registrados |
+| POST   | `/api/v1/accounts/admin/`         | Criar novo admin                    |
+
 ---
+
 ### Rotas de categorias (`categories` app)
 
-| Método | Endpoint                       | Descrição                      |
-|--------|-------------------------------|-------------------------------|
-| POST   | `/api/v1/categories/categorie/` | Registro de nova categoria |
-| GET    | `/api/v1/categories/categorie/`     | Listar categorias registradas |
+| Método | Endpoint                        | Descrição                     |
+| ------ | ------------------------------- | ----------------------------- |
+| POST   | `/api/v1/categories/categorie/` | Registro de nova categoria    |
+| GET    | `/api/v1/categories/categorie/` | Listar categorias registradas |
 
 ---
-
 
 ## Como rodar a aplicação
 
@@ -109,11 +112,13 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 ```
 
 4. Cadastre novas categorias de estabelecimento(necessario para fazer cadastros de estabelecimeto):
+
 ```bash
     #rota para criação e listagens de categorias em desenvolvimento
 ```
 
 6. Rode o servidor de desenvolvimento:
+
 ```bash
     python manage.py runserver
 ```
@@ -123,20 +128,20 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 - Utilize o Postman, Insomnia ou outra ferramenta para fazer requisições HTTP.
 
 - Para login, envie um POST para /api/v1/authentication/login/ com usuário e senha.
-  
 - Para validar o token, confira o codigo enviado por email para a conta disponibilizada
 
 - Para renovar o token, envie um POST para /api/v1/authentication/api/token/refresh/ com o refresh token no corpo.
 
 ### Arquivo Postman
+
 Para facilitar, disponibilizamos um arquivo Postman com todas as requisições configuradas, incluindo os dados dos corpos (body). Importe esse arquivo na sua ferramenta para começar a testar rapidamente.
 
 ## Observações importantes sobre autenticação e logout
-- Os tokens JWT são enviados e armazenados via cookies HTTP-only para segurança.  
-- Após a validação do código, as rotas serão autenticadas via cookies  
-- O access token tem validade curta para proteger o sistema contra acessos não autorizados.  
-- O refresh token é usado para renovar o access token sem que o usuário precise logar novamente.  
-- No logout, os cookies contendo os tokens são removidos, mas os tokens não são invalidados no servidor e continuam válidos até expirarem.  
+
+- Os tokens JWT são enviados e armazenados via cookies HTTP-only para segurança.
+- Após a validação do código, as rotas serão autenticadas via cookies
+- O access token tem validade curta para proteger o sistema contra acessos não autorizados.
+- O refresh token é usado para renovar o access token sem que o usuário precise logar novamente.
+- No logout, os cookies contendo os tokens são removidos, mas os tokens não são invalidados no servidor e continuam válidos até expirarem.
 - Para implementar invalidação imediata de tokens, seria necessário um mecanismo de blacklist, que não está presente nesta versão da API.
 - Este é apenas o começo do projeto, outras funcionalidades como autorização, permissões específicas e testes serão implementadas em breve.
-
