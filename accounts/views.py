@@ -1,59 +1,68 @@
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework import status
 from rest_framework.generics import ListCreateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+
 from accounts.models import Establishment, User
-from accounts.serializers import EstablishementSerializer, AdminCreateSerializer
+from accounts.serializers import AdminCreateSerializer, EstablishementSerializer
 from authentication.authentication import CookieJWTAuthentication
 
-    
+
 class EstablishmentListCreateView(ListCreateAPIView):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
     queryset = Establishment.objects.all()
     serializer_class = EstablishementSerializer
     authentication_classes = [CookieJWTAuthentication]
 
     def get_permissions(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return [AllowAny()]
         return [IsAuthenticated()]
 
     def list(self, request):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        return Response({
-            "message": {
-                "title": "Usuários Listados",
-                "text": "Lista de todos os usuários recuperada com sucesso.",
-                "description": "Esta resposta exibe a lista completa de usuários cadastrados no sistema, sem filtros aplicados."
+        return Response(
+            {
+                "message": {
+                    "title": "Usuários Listados",
+                    "text": "Lista de todos os usuários recuperada com sucesso.",
+                    "description": "Esta resposta exibe a lista completa de usuários cadastrados no sistema, sem filtros aplicados.",
+                },
+                "success": True,
+                "status": 200,
+                "data": serializer.data,
             },
-            "success": True,
-            "status": 200,
-            "data": serializer.data
-        })
+            status=status.HTTP_200_OK,
+        )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
-        return Response({
-            "message": {
-                "title": "Estabelecimento Registrado",
-                "text": "Seu novo estabelecimento foi cadastrado com sucesso.",
-                "description": "Ele já está ativo e pronto para ser configurado. Acesse a área de gerenciamento para adicionar detalhes, serviços e horários de funcionamento."
+        return Response(
+            {
+                "message": {
+                    "title": "Estabelecimento Registrado",
+                    "text": "Seu novo estabelecimento foi cadastrado com sucesso.",
+                    "description": "Ele já está ativo e pronto para ser configurado. Acesse a área de gerenciamento para adicionar detalhes, serviços e horários de funcionamento.",
+                },
+                "success": True,
+                "status": 201,
+                "data": serializer.data,
             },
-            "success": True,
-            "status": 201,
-            "data": serializer.data
-        })
-        
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class AdminListCreateView(ListCreateAPIView):
-    permission_classes = (IsAuthenticated, )
-    queryset = User.objects.filter(type='admin')
+    permission_classes = (IsAuthenticated,)
+    queryset = User.objects.filter(type="admin")
     serializer_class = AdminCreateSerializer
     authentication_classes = [CookieJWTAuthentication]
-    
+
     def get_permissions(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return [AllowAny()]
         return [IsAuthenticated()]
