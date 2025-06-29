@@ -71,6 +71,7 @@ def create_establishment(
     return establishment
 
 
+@pytest.mark.integration
 class TestEstablishmentListCreateView:
     """Verifica se um usuário autenticado PODE listar estabelecimentos."""
 
@@ -123,6 +124,36 @@ class TestEstablishmentListCreateView:
 
         assert Establishment.objects.filter(name="Salão da Maria").exists()
 
-    def test_create_establishment_with_invalid_user():
-        # TODO
-        pass
+    def test_create_establishment_with_invalid_user(
+        self,
+        api_client,
+        create_user_for_establishment,
+        create_location,
+        create_category,
+    ):
+        url = reverse("establishment_create_list_view")
+
+        establishment_data = {
+            "name": "Salão da Maria",
+            "CNPJ": "98765432000100",
+            "whatsapp": 88988887777,
+            "user": {
+                "username": "maria_owner",
+                "email": "maria@example.com",
+                "password": "password123",
+                "type": "admin",  # <-- Invalid User
+            },
+            "location": {
+                "country": "Brasil",
+                "state": "PI",
+                "city": "Teresina",
+                "CEP": "64000000",
+                "neighborhood": "Centro",
+                "street": "Rua Nova",
+                "number": 456,
+            },
+            "category": [create_category.id],
+        }
+        response = api_client.post(url, establishment_data, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST

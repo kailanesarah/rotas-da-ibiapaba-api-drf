@@ -29,6 +29,7 @@ def create_categories(db):
     Category.objects.create(name="Restourante")
 
 
+@pytest.mark.integration
 class TestCategoriesListCreateView:
 
     def test_list_categories_authenticated(
