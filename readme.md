@@ -132,6 +132,36 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 
 - Para renovar o token, envie um POST para /api/v1/authentication/api/token/refresh/ com o refresh token no corpo.
 
+## Executando TESTES automatizados
+
+- **Para executar TODOS os testes:**
+
+```bash
+pytest
+
+```
+
+- **Para executar APENAS os testes unitários:**
+
+```bash
+pytest -m unit
+
+```
+
+- **Para executar APENAS os testes de integração:**
+
+```bash
+pytest -m integration
+
+```
+
+- **Para executar TODOS os testes, EXCETO os de integração:**
+
+```bash
+pytest -m "not integration"
+
+```
+
 ### Arquivo Postman
 
 Para facilitar, disponibilizamos um arquivo Postman com todas as requisições configuradas, incluindo os dados dos corpos (body). Importe esse arquivo na sua ferramenta para começar a testar rapidamente.
