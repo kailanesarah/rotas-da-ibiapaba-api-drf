@@ -162,6 +162,15 @@ pytest -m "not integration"
 
 ```
 
+## Verificar a cobertura de testes
+
+```bash
+pytest --cov=your_app
+
+# Ex: pytest --cov=authentication
+
+```
+
 ### Arquivo Postman
 
 Para facilitar, disponibilizamos um arquivo Postman com todas as requisições configuradas, incluindo os dados dos corpos (body). Importe esse arquivo na sua ferramenta para começar a testar rapidamente.
