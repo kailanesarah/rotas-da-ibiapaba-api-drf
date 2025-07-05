@@ -1,60 +1,97 @@
-# API - Parte 1: Autenticação, Registro e Login
+# API Rotas da Ibiapaba - Módulo 1: Autenticação, Registro e Gerenciamento de Usuários
 
-Este repositório contém a primeira parte da API, onde implementamos funcionalidades básicas de **autenticação**, **registro de usuários** e **login**, utilizando Django REST Framework (DRF) e o pacote `djangorestframework-simplejwt` para autenticação via JSON Web Tokens (JWT).
-
----
-
-## Funcionalidades
-- Registro de usuários (estabelecimentos)
-- Login via JWT com cookies
-- Reset e redefinição de senha
-- Logout com invalidação de token
-- Listagem de estabelecimentos
-- [Próximas funcionalidades em desenvolvimento]
+Este repositório contém a primeira etapa do desenvolvimento da API, focada na implementação das funcionalidades essenciais de **autenticação**, **registro de usuários** e **login**.  
+Utilizamos o **Django REST Framework (DRF)** em conjunto com o pacote `djangorestframework-simplejwt` para autenticação segura via **JSON Web Tokens (JWT)**, garantindo proteção e controle de acesso robustos.
 
 ---
 
-## Tecnologias utilizadas
+## ✅ Funcionalidades
+
+- **Cadastro de Usuários**  
+  Permite o registro de estabelecimentos e administradores.
+
+- **Autenticação via JWT com Cookies Seguros**  
+  Login utilizando tokens JWT armazenados em cookies HTTPOnly para maior segurança.
+
+- **Recuperação de Senha**  
+  Envio de e-mail para redefinição de senha com token de verificação.
+
+- **Logout Seguro**  
+  Invalida os tokens armazenados ao realizar logout.
+
+- **Listagem de Estabelecimentos**  
+  Exibe todos os estabelecimentos cadastrados no sistema.
+
+- **Criação de Estabelecimentos com Categorias**  
+  Permite o cadastro de novos estabelecimentos e associação com categorias específicas.
+
+- **Reenvio de Código de Verificação**  
+  Possibilidade de reenviar o código necessário para login ou confirmação de e-mail.
+
+- **Renovação de Tokens JWT (Access e Refresh)**  
+  Geração de novos tokens JWT e atualização automática nos cookies do usuário.
+
+
+---
+
+## 🚀 Tecnologias Utilizadas
 
 - **Python 3.x**
 - **Django 4.x**
 - **Django REST Framework (DRF)**
-- **djangorestframework-simplejwt** — para autenticação JWT e gerenciamento de tokens
-- **SQLite** (padrão, para desenvolvimento)
+- **djangorestframework-simplejwt** — autenticação via JWT e gerenciamento de tokens
+- **PostgreSQL** — banco de dados relacional usado em ambiente de produção
+- **SQLite** — banco de dados leve usado em ambiente de desenvolvimento local
+- **Docker & Docker Compose** — conteinerização da aplicação e orquestração de serviços
 
 ---
 
-## Pré-requisitos
-- Python 3.8 ou superior
-- Pip instalado
-- Ambiente virtual (recomendado)
-- Variáveis de ambiente necessárias
-    - EMAIL_HOST_USER
-    - EMAIL_HOST_PASSWORD
-    - BASE_URL
+## ⚙️ Pré-requisitos
+
+Antes de iniciar o projeto, certifique-se de ter os seguintes itens instalados e configurados:
+
+- **Python 3.8 ou superior**
+- **pip** — gerenciador de pacotes do Python
+- **Ambiente virtual** (recomendado) — para isolamento das dependências
+
+### 🔐 Variáveis de Ambiente Necessárias
+
+Certifique-se de configurar as seguintes variáveis de ambiente:
+
+- `EMAIL_HOST_USER` — e-mail remetente (usado para envio de mensagens automáticas)
+- `EMAIL_HOST_PASSWORD` — senha ou token de acesso do e-mail remetente
+- `BASE_URL` — URL base da API (ex: `http://localhost:8000`)
+- `URL_FRONT` — URL do front-end que receberá os links de redefinição de senha e outros fluxos
+
 
 ---
 
-## Estrutura de rotas principais
+## 🔀 Estrutura de Rotas Principais
 
 ### Rotas de autenticação (`authentication` app)
 
-| Método | Endpoint                                             | Descrição                                                            |
-|--------|------------------------------------------------------|----------------------------------------------------------------------|
-| POST   | `/api/v1/authentication/login/`                      | Realiza login, retorna tokens JWT (access + refresh)                 |
-| POST   | `/api/v1/authentication/logout/`                     | Realiza logout, blacklist do refresh token                           |
-| POST   | `/api/v1/authentication/verifyCode/`                 | Verifica código enviado por email para fazer o login                 |
-| POST   | `/api/v1/authentication/resend_code/`            | Reenvia o código de recuperação de senha                               |
-| POST   | `/api/v1/authentication/reset_password/`             | Envia o link com os dados de reset para o email do usuário           |
-| PATCH  | `/api/v1/authentication/reset_confirm_password/`     | Reseta a senha do usuário                                            |
+## 🔐 Rotas de Autenticação
 
-### Rotas de usuários (`accounts` app)
+| Método | Endpoint                                              | Descrição                                                                 |
+|--------|-------------------------------------------------------|---------------------------------------------------------------------------|
+| POST   | `/api/v1/authentication/login/`                       | Realiza login e retorna tokens JWT (access e refresh)                    |
+| POST   | `/api/v1/authentication/logout/`                      | Realiza logout e adiciona o refresh token à blacklist                    |
+| POST   | `/api/v1/authentication/verifyCode/`                  | Verifica o código enviado por e-mail para completar o login              |
+| POST   | `/api/v1/authentication/resend_code/`                 | Reenvia o código de verificação para o e-mail                            |
+| POST   | `/api/v1/authentication/reset_password/`              | Envia um link de redefinição de senha para o e-mail do usuário           |
+| POST   | `/api/v1/authentication/token/refresh/`               | Renova tokens de acesso e refresh                                        |
+| PATCH  | `/api/v1/authentication/reset_confirm_password/`      | Redefine a senha do usuário a partir do token de recuperação             |
 
-| Método | Endpoint                          | Descrição                          |
+
+
+### Rotas de Usuários (`accounts` app)
+
+| Método | Endpoint                           | Descrição                            |
 |--------|-----------------------------------|------------------------------------|
-| POST   | `/api/v1/accounts/establishment/` | Registro de novo estabelecimento   |
+| POST   | `/api/v1/accounts/establishment/` | Registrar novo estabelecimento     |
 | GET    | `/api/v1/accounts/establishment/` | Listar estabelecimentos registrados|
-| POST   | `/api/v1/accounts/admin/`         | Criar novo admin|
+| POST   | `/api/v1/accounts/admin/`         | Criar novo administrador           |
+
 ---
 ### Rotas de categorias (`categories` app)
 
@@ -66,7 +103,7 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
 ---
 
 
-## Como rodar a aplicação
+## 🚀 Como rodar a aplicação
 
 1. Dê um fork em nosso repositório:
 
@@ -102,15 +139,9 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
     python manage.py migrate
 ```
 
-5. Crie um super usuário (para acessar o admin):
-
+5. Cadastre novas categorias de estabelecimento(necessario para fazer cadastros de estabelecimeto):
 ```bash
-    python manage.py createsuperuser
-```
-
-4. Cadastre novas categorias de estabelecimento(necessario para fazer cadastros de estabelecimeto):
-```bash
-    #rota para criação e listagens de categorias em desenvolvimento
+    /api/v1/categories/categorie/
 ```
 
 6. Rode o servidor de desenvolvimento:
@@ -118,25 +149,49 @@ Este repositório contém a primeira parte da API, onde implementamos funcionali
     python manage.py runserver
 ```
 
-## Testando a API
+---
+## 🧪 Testando a API
 
-- Utilize o Postman, Insomnia ou outra ferramenta para fazer requisições HTTP.
+- Utilize ferramentas como **Postman**, **Insomnia**, **API Dog** ou similares para realizar requisições HTTP.
 
-- Para login, envie um POST para /api/v1/authentication/login/ com usuário e senha.
+- **Login**  
+  Envie uma requisição `POST` para `/api/v1/authentication/login/` com os dados do usuário (usuário e senha) no corpo da requisição, você receberá um código no email cadastrado.
+
+- **Validação de Token**  
+  Após o login, verifique o código enviado por e-mail para confirmar e ativar a conta ou validar o token recebido.
+
+- **Renovação de Token**  
+  Envie uma requisição `POST` para `/api/v1/authentication/api/token/refresh/` com o **refresh token** no corpo da requisição para obter um novo token de acesso.
+
+💡 Dica: Nos clientes API (Postman, API Dog), salve os tokens em variáveis de ambiente para facilitar testes sequenciais e automáticos.
+
+---
+
+### 📂 Arquivo Postman
+
+Para facilitar os testes, disponibilizamos um arquivo **Postman** com todas as requisições pré-configuradas, incluindo exemplos dos corpos (body).  
+Importe esse arquivo na sua ferramenta favorita (Postman, API Dog, Insomnia) para começar a testar rapidamente a API.
+
+---
+
+## ⚠️ Observações Importantes sobre Autenticação e Logout
+
+- Os tokens JWT são enviados e armazenados via **cookies HTTP-only** para garantir maior segurança contra ataques XSS.
+- Após a validação do código enviado por e-mail, todas as rotas protegidas passam a ser autenticadas utilizando esses cookies.
+- O **access token** possui validade curta para proteger o sistema contra acessos não autorizados.
+- O **refresh token** é utilizado para renovar o access token sem que o usuário precise fazer login novamente.
+- No logout, os cookies contendo os tokens são removidos do cliente, porém os tokens em si **não são invalidados no servidor** e permanecem válidos até expirarem.
+- A implementação de uma **blacklist para invalidação imediata** dos tokens não está presente nesta versão da API, mas é uma melhoria planejada.
+- Este é apenas o início do projeto; funcionalidades adicionais, como controle de autorização, permissões específicas e testes automatizados, serão implementadas em breve.
   
-- Para validar o token, confira o codigo enviado por email para a conta disponibilizada
+---
 
-- Para renovar o token, envie um POST para /api/v1/authentication/api/token/refresh/ com o refresh token no corpo.
+## 📄 Licença
 
-### Arquivo Postman
-Para facilitar, disponibilizamos um arquivo Postman com todas as requisições configuradas, incluindo os dados dos corpos (body). Importe esse arquivo na sua ferramenta para começar a testar rapidamente.
+Este software é propriedade exclusiva da NexTech - Soluções em software.  
+Todo o código-fonte, documentação e materiais relacionados são confidenciais e protegidos por leis de direitos autorais.  
+Nenhuma parte deste software pode ser reproduzida, distribuída ou utilizada sem a autorização expressa e por escrito da NexTech - Soluções em software.  
 
-## Observações importantes sobre autenticação e logout
-- Os tokens JWT são enviados e armazenados via cookies HTTP-only para segurança.  
-- Após a validação do código, as rotas serão autenticadas via cookies  
-- O access token tem validade curta para proteger o sistema contra acessos não autorizados.  
-- O refresh token é usado para renovar o access token sem que o usuário precise logar novamente.  
-- No logout, os cookies contendo os tokens são removidos, mas os tokens não são invalidados no servidor e continuam válidos até expirarem.  
-- Para implementar invalidação imediata de tokens, seria necessário um mecanismo de blacklist, que não está presente nesta versão da API.
-- Este é apenas o começo do projeto, outras funcionalidades como autorização, permissões específicas e testes serão implementadas em breve.
+Para mais informações ou solicitações de uso, entre em contato com a equipe responsável.
+
 
