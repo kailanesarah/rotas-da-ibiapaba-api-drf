@@ -3,6 +3,9 @@ from django.contrib.auth import login, logout
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -16,6 +19,7 @@ from authentication.services.cookie_service import CookieService
 from authentication.services.email_services import EmailService
 from authentication.services.password_reset_services import PasswordResetService
 
+
 # instancias
 token_service = TokenService()
 verification_service = VerificationService()
@@ -25,6 +29,7 @@ cookie_service = CookieService()
 
 
 class CodeValidatorView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
         try:
@@ -58,7 +63,7 @@ class CodeValidatorView(APIView):
 
                 # Cria cookies para os tokens
                 cookie_service.create_cookie(
-                    response, 'access_token', access_token, 3 * 4)
+                    response, 'access_token', access_token, 7 * 24 * 60 * 60)
                 cookie_service.create_cookie(
                     response, 'refresh_token', refresh_token, 7 * 24 * 60 * 60)  # 7 dias
 
@@ -78,6 +83,7 @@ class CodeValidatorView(APIView):
 
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
         try:
@@ -97,7 +103,7 @@ class LoginView(APIView):
                     "Se tiver alguma dúvida, estamos aqui para ajudar.\n\n"
                     "Equipe Rotas da Ibiapaba"
                 )
-                # Corrigido para usar user.email
+
                 email_service.send_email(subject, body, user.email)
 
                 return Response({
@@ -127,6 +133,7 @@ class LogoutView(APIView):
 
 
 class PasswordResetView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
         try:
@@ -160,6 +167,7 @@ class PasswordResetView(APIView):
 
 
 class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
 
     def patch(self, request):
         try:
@@ -184,3 +192,69 @@ class PasswordResetConfirmView(APIView):
             return Response({'message': f'Senha redefinida com sucesso para o usuário: {email}'}, status=HTTP_200_OK)
         except Exception as e:
             return Response({'error': 'Erro ao processar a requisição', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
+
+class ResendCodeView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            email_user = request.data.get('email')
+            user = verification_service.get_user_by_email(email_user)
+
+            code = verification_service.generate_code()
+            verification_service.save_code(code, user.email)
+
+            subject = "NexTech: Seu novo código chegou!"
+            body = (
+                f"Olá novamente!\n\n"
+                "Conforme solicitado, aqui está um novo código de acesso para que você possa entrar no *Rotas da Ibiapaba* e continuar explorando o melhor da nossa região!\n\n"
+                f"*Seu novo código de acesso:* {code}\n\n"
+                "Caso não tenha solicitado este código, basta ignorar esta mensagem.\n\n"
+                "Se precisar de ajuda, conte com a gente!\n\n"
+                "Atenciosamente,\n"
+                "Equipe Rotas da Ibiapaba "
+            )
+
+            email_service.send_email(subject, body, user.email)
+
+            return Response({'message': f'Código reenviado com sucesso para o usuário: {email_user}'}, status=HTTP_200_OK)
+
+        except Exception as e:
+
+            return Response({'error': 'Erro ao processar a requisição', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
+
+
+class TokenRefreshView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get('refresh_token')
+
+            if not refresh_token:
+                raise AuthenticationFailed('Refresh token não encontrado.')
+
+            # validando e gerando um novo token
+            serializer = TokenRefreshSerializer(
+                data={'refresh': refresh_token})
+            serializer.is_valid(raise_exception=True)
+
+            new_access_token = serializer.validated_data['access']
+
+            response = Response({'success': 'Tokens atualizados'}, status=200)
+
+            # Cria novo cookie access token
+            cookie_service.create_cookie(
+                response, 'access_token', new_access_token, 7 * 24 * 60 * 60)
+
+            # Se houver refresh novo, atualiza também
+            if 'refresh' in serializer.validated_data:
+                new_refresh_token = serializer.validated_data['refresh']
+                cookie_service.create_cookie(
+                    response, 'refresh_token', new_refresh_token, 7 * 24 * 60 * 60)
+
+            return response
+
+        except AuthenticationFailed as e:
+            return Response({'error': str(e)}, status=HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({'error': 'Erro ao atualizar tokens', 'detail': str(e)},
+                            status=HTTP_400_BAD_REQUEST)
