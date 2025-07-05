@@ -7,43 +7,46 @@ from categories.serializers import CategorySerializer
 class AdminCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        filelds = fields = ['id', 'email', 'username', 'password', 'type']
+        filelds = fields = ['id', 'email', 'username', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
 
         user = User.objects.create_superuser(
-                username=validated_data['username'],
-                email=validated_data['email'],
-                password=validated_data['password'],
-                type=validated_data['type']  # <-- importante!
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            type='admin'
         )
-       
+
         return user
+
 
 class EstablishmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'password', 'type']
+        fields = ['id', 'email', 'username', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User(
             email=validated_data['email'],
             username=validated_data['username'],
-            type=validated_data['type'],  # <-- importante!
+            type='establishment',
             is_staff=False,
             is_superuser=False
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
-    
+
+
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = '__all__'
-        
+
+
 class EstablishementSerializer(serializers.ModelSerializer):
     user = EstablishmentCreateSerializer()
     location = LocationSerializer()

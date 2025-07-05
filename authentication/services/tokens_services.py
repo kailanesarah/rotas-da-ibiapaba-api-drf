@@ -6,6 +6,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from accounts.models import User, Establishment
 
 
+
 class TokenService:
 
     def authenticate_user(self, request):

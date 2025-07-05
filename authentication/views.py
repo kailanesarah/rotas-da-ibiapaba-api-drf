@@ -270,8 +270,9 @@ class TokenRefreshView(APIView):
                     'user_type': 'establishment',
                     'user': {
                         'id': user.id,
-                        'email': user.user.email, 
                         'name': user.name,
+                        'email': user.user.email, 
+                        
                     }
                 }
 
