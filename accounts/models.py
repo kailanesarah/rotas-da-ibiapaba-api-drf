@@ -19,7 +19,7 @@ class Location(models.Model):
     neighborhood = models.CharField(max_length=60)
     street = models.CharField(max_length=100)
     number = models.IntegerField()
-    complement = models.CharField(blank=True, null=True)
+    complement = models.CharField(blank=True, null=True, max_length=250)
 
 
 class CustomUserManager(BaseUserManager):

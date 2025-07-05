@@ -18,9 +18,12 @@ SECRET_KEY = "django-insecure-r7f4fs%kd^e(g45g62l=)3sqvavo&pp*t#izy5ds9fkmobgi=(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-RENDER_EXTERNAL_HOST = config("RENDER_EXTERNAL_HOST")
+RENDER_EXTERNAL_HOST = config("RENDER_EXTERNAL_HOST", default=None)
 
-ALLOWED_HOSTS = [RENDER_EXTERNAL_HOST]
+if RENDER_EXTERNAL_HOST:
+    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOST]
+else:
+    ALLOWED_HOSTS = ["http://127.0.0.1:8000", "127.0.0.1"]
 
 
 # CORS (ex: permitir acesso local do frontend)
@@ -89,8 +92,11 @@ DATABASES = {
     }
 }
 
-if "DATABASE_URL" in os.environ:
+DATABASE_URL = config("DATABASE_URL", default=None)
+
+if DATABASE_URL:
     DATABASES["default"] = dj_database_url.config(
+        default=DATABASE_URL,
         conn_max_age=600,
         conn_health_checks=True,
     )
