@@ -8,7 +8,7 @@ from rest_framework.status import (
 
 
 class VerificationService:
-    
+
     def generate_code(self):
         code = pyotp.TOTP(pyotp.random_base32(), interval=300)
         return code.now()
@@ -22,10 +22,9 @@ class VerificationService:
         if code_stored == code:
             return 1
         return 0
-    
+
     def get_user_by_email(self, email):
         try:
             return User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({'error': 'Usuário não encontrado'},status=HTTP_404_NOT_FOUND)
-        
+            return Response({'error': 'Usuário não encontrado'}, status=HTTP_404_NOT_FOUND)

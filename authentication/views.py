@@ -193,6 +193,7 @@ class PasswordResetConfirmView(APIView):
         except Exception as e:
             return Response({'error': 'Erro ao processar a requisição', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
 
+
 class ResendCodeView(APIView):
     permission_classes = [AllowAny]
 
