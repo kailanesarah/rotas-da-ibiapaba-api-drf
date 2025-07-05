@@ -2,6 +2,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
+from accounts.models import User, Establishment
+
 
 
 class TokenService:
@@ -43,3 +46,26 @@ class TokenService:
         except Exception as e:
             raise Exception(
                 f"Erro na validação do token de reset de senha: {str(e)}")
+
+    def get_user_from_refresh_token(refresh_token_str):
+        try:
+            token = RefreshToken(refresh_token_str)
+            user_id = token['user_id']
+            user = User.objects.get(id=user_id)
+
+            if user.type == 'admin':
+                return user
+
+            elif user.type == 'establishment':
+                establishment = Establishment.objects.filter(user=user).first()
+                if not establishment:
+                    raise AuthenticationFailed("Nenhum estabelecimento encontrado para esse usuário.")
+                return establishment
+
+            else:
+                raise AuthenticationFailed("Tipo de usuário inválido.")
+
+        except Exception as e:
+            raise AuthenticationFailed(f"Error: {e}")
+
+
