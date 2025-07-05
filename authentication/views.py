@@ -233,29 +233,59 @@ class TokenRefreshView(APIView):
             if not refresh_token:
                 raise AuthenticationFailed('Refresh token não encontrado.')
 
-            # validando e gerando um novo token
-            serializer = TokenRefreshSerializer(
-                data={'refresh': refresh_token})
+            serializer = TokenRefreshSerializer(data={'refresh': refresh_token})
             serializer.is_valid(raise_exception=True)
 
             new_access_token = serializer.validated_data['access']
+            new_refresh_token = serializer.validated_data['refresh']
 
-            response = Response({'success': 'Tokens atualizados'}, status=200)
+            response = Response(status=200)
 
-            # Cria novo cookie access token
+            # Criação dos novos cookies
             cookie_service.create_cookie(
-                response, 'access_token', new_access_token, 7 * 24 * 60 * 60)
+                response, 'access_token', new_access_token, 7 * 24 * 60 * 60
+            )
+            cookie_service.create_cookie(
+                response, 'refresh_token', new_refresh_token, 7 * 24 * 60 * 60
+            )
 
-            # Se houver refresh novo, atualiza também
-            if 'refresh' in serializer.validated_data:
-                new_refresh_token = serializer.validated_data['refresh']
-                cookie_service.create_cookie(
-                    response, 'refresh_token', new_refresh_token, 7 * 24 * 60 * 60)
+            # Recupera usuário dono do refresh token
+            user = TokenService.get_user_from_refresh_token(new_refresh_token)
+            
+            #User:admin
+            if hasattr(user, 'type') and user.type == 'admin':
+                response.data = {
+                    'success': 'Tokens atualizados',
+                    'user_type': 'admin',
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                    }
+                }
+            #user: Estabelecimento
+            elif hasattr(user, 'name'): 
+                response.data = {
+                    'success': 'Tokens atualizados',
+                    'user_type': 'establishment',
+                    'user': {
+                        'id': user.id,
+                        'name': user.name,
+                        'email': user.user.email, 
+                        
+                    }
+                }
+
+            else:
+                raise AuthenticationFailed("Tipo de usuário inválido.")
 
             return response
 
         except AuthenticationFailed as e:
             return Response({'error': str(e)}, status=HTTP_401_UNAUTHORIZED)
+
         except Exception as e:
-            return Response({'error': 'Erro ao atualizar tokens', 'detail': str(e)},
-                            status=HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Erro ao atualizar tokens', 'detail': str(e)},
+                status=HTTP_400_BAD_REQUEST
+            )
