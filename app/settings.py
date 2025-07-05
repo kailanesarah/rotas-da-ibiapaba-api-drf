@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -87,6 +88,14 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+if "DATABASE_URL" in os.environ:
+    DATABASES["default"] = dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+
+    print("SET DATABASE: Using Postgres")
 
 
 # Password validation
