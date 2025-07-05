@@ -7,6 +7,7 @@ from .views import (
     PasswordResetView,
     PasswordResetConfirmView,
     ResendCodeView,
+    TokenRefreshView,
 )
 
 urlpatterns = [
