@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "accounts",
     "authentication",
     "categories",
+    "photos",
     "rest_framework",
     "corsheaders",
     "django_otp",
