@@ -6,7 +6,6 @@ from rest_framework.exceptions import AuthenticationFailed
 from accounts.models import User, Establishment
 
 
-
 class TokenService:
 
     def authenticate_user(self, request):
@@ -59,7 +58,8 @@ class TokenService:
             elif user.type == 'establishment':
                 establishment = Establishment.objects.filter(user=user).first()
                 if not establishment:
-                    raise AuthenticationFailed("Nenhum estabelecimento encontrado para esse usuário.")
+                    raise AuthenticationFailed(
+                        "Nenhum estabelecimento encontrado para esse usuário.")
                 return establishment
 
             else:
@@ -67,5 +67,3 @@ class TokenService:
 
         except Exception as e:
             raise AuthenticationFailed(f"Error: {e}")
-
-
