@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-
 from categories.models import Category
+from photos.models import EstablishmentProfileImage
 
 STATE_CHOICES = (
     ("CE", "Ceará"),
@@ -9,17 +9,6 @@ STATE_CHOICES = (
     ("MA", "Maranhão"),
     ("BA", "Bahia"),
 )
-
-
-class Location(models.Model):
-    country = models.CharField(max_length=100)
-    state = models.CharField(choices=STATE_CHOICES, max_length=3)
-    city = models.CharField(max_length=100)
-    CEP = models.CharField(max_length=8)
-    neighborhood = models.CharField(max_length=60)
-    street = models.CharField(max_length=100)
-    number = models.IntegerField()
-    complement = models.CharField(blank=True, null=True, max_length=250)
 
 
 class CustomUserManager(BaseUserManager):
@@ -66,23 +55,68 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+class Location(models.Model):
+    country = models.CharField(max_length=100)
+    state = models.CharField(choices=STATE_CHOICES, max_length=3)
+    city = models.CharField(max_length=100)
+    CEP = models.CharField(max_length=8)
+    neighborhood = models.CharField(max_length=60)
+    street = models.CharField(max_length=100)
+    number = models.IntegerField(null=True)
+    complement = models.CharField(blank=True, null=True, max_length=250)
+
+class SocialMedia(models.Model):
+    whatsapp = models.CharField(max_length=20, blank=True, null=True,
+                                help_text='Número do WhatsApp com DDD, ex: (88) 9 11999999')
+    instagram = models.CharField(
+        max_length=20, blank=True, null=True, help_text='Usuario do instagram Ex:@joao_silva')
+    facebook = models.CharField(
+        max_length=20, blank=True, null=True, help_text='Usuario do facebook Ex:joao_silva')
+
 
 class Establishment(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="establishment_user"
+        User, 
+        on_delete=models.CASCADE, 
+        related_name="establishment_user"
     )
-    name = models.CharField(max_length=100)
-    description = models.TextField(null=True)
-    CNPJ = models.CharField(max_length=14)
-    whatsapp = models.BigIntegerField()  # para números maiores que IntegerField
-    # social_media = models.ForeignKey(
-    #     SocialMedia, on_delete=models.CASCADE, related_name="establishment_social_media"
-    # )
+    name = models.CharField(max_length=100) 
+
+    description = models.TextField(null=True, blank=True)
+    
+    cnpj = models.CharField(max_length=14)
+
+    social_media = models.ForeignKey(
+        SocialMedia, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="establishments_social_media"
+    )
+
     location = models.ForeignKey(
-        Location, on_delete=models.CASCADE, related_name="establishment_location"
+        Location, 
+        on_delete=models.PROTECT, 
+        related_name="establishment_location"
     )
-    category = models.ManyToManyField(Category, related_name="establishments_category")
+    
+    category = models.ManyToManyField(
+        Category, 
+        related_name="establishments_category"
+    )
+    
+    pix_key = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="Chave Pix do estabelecimento (e-mail, telefone, CPF/CNPJ ou aleatória)"
+    )
 
+    photos = models.OneToOneField(
+        EstablishmentProfileImage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="establishment_photo"
+    )
 
-# class SocialMedia:
-#     pass
