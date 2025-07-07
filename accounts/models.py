@@ -55,7 +55,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-
 class Location(models.Model):
     country = models.CharField(max_length=100)
     state = models.CharField(choices=STATE_CHOICES, max_length=3)
@@ -65,7 +64,6 @@ class Location(models.Model):
     street = models.CharField(max_length=100)
     number = models.IntegerField(null=True)
     complement = models.CharField(blank=True, null=True, max_length=250)
-
 
 class SocialMedia(models.Model):
     whatsapp = models.CharField(max_length=20, blank=True, null=True,
@@ -121,3 +119,4 @@ class Establishment(models.Model):
         blank=True,
         related_name="establishment_photo"
     )
+
