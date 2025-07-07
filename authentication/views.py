@@ -1,3 +1,4 @@
+from rest_framework import status
 from django.contrib.auth import login, logout
 
 from rest_framework.views import APIView
@@ -19,6 +20,8 @@ from authentication.services.cookie_service import CookieService
 from authentication.services.email_services import EmailService
 from authentication.services.password_reset_services import PasswordResetService
 
+from accounts.serializers import EstablishementSerializer
+from accounts.models import Establishment, User
 
 # instancias
 token_service = TokenService()
@@ -36,8 +39,10 @@ class CodeValidatorView(APIView):
             email_user = request.data.get('email')
             code_user = request.data.get('code')
 
-            # verifica usuário
+            # Verifica usuário pelo email
             user = verification_service.get_user_by_email(email_user)
+            user_obj = User.objects.get(email=email_user)
+            establishment = Establishment.objects.filter(user=user_obj).first()
 
             # Verifica código
             code_verification_result = verification_service.verify_code(
@@ -45,7 +50,7 @@ class CodeValidatorView(APIView):
             if code_verification_result == 0:
                 return Response(
                     {'error': 'Código incorreto, tente novamente'},
-                    status=HTTP_401_UNAUTHORIZED
+                    status=status.HTTP_401_UNAUTHORIZED
                 )
 
             try:
@@ -54,32 +59,49 @@ class CodeValidatorView(APIView):
                 access_token = tokens['access']
                 refresh_token = tokens['refresh']
 
-                # Prepara resposta
-                response = Response({
-                    'success': 'Código verificado com sucesso',
-                    'user_id': user.id,
-                    'email': user.email
-                }, status=HTTP_200_OK)
+                # Cria resposta vazia
+                response = Response(status=200)
+
+                # User: Estabelecimento
+                if establishment:
+                    establishment_serializer = EstablishementSerializer(
+                        establishment)
+                    response.data = {
+                        'success': 'Usuário autenticado com sucesso!',
+                        'user_type': 'establishment',
+                        'user': establishment_serializer.data
+                    }
+                else:
+                    # User:Admin
+                    if hasattr(user, 'type'):
+                        response.data = {
+                            'success': 'Usuário autenticado com sucesso!',
+                            'user_type': user.type,
+                            'user': {
+                                'id': user.id,
+                                'email': user.email
+                            }
+                        }
 
                 # Cria cookies para os tokens
                 cookie_service.create_cookie(
                     response, 'access_token', access_token, 7 * 24 * 60 * 60)
                 cookie_service.create_cookie(
-                    response, 'refresh_token', refresh_token, 7 * 24 * 60 * 60)  # 7 dias
+                    response, 'refresh_token', refresh_token, 7 * 24 * 60 * 60)
 
                 return response
 
             except KeyError as e:
                 return Response(
                     {'error': f'Token não encontrado na resposta: {str(e)}'},
-                    status=HTTP_500_INTERNAL_SERVER_ERROR
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
         except Exception as e:
             return Response({
-                'error': 'Erro na tentativa de validar o codigo',
+                'error': 'Erro na tentativa de validar o código',
                 'detail': str(e)
-            }, status=HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -233,15 +255,17 @@ class TokenRefreshView(APIView):
             if not refresh_token:
                 raise AuthenticationFailed('Refresh token não encontrado.')
 
-            serializer = TokenRefreshSerializer(data={'refresh': refresh_token})
+            serializer = TokenRefreshSerializer(
+                data={'refresh': refresh_token})
             serializer.is_valid(raise_exception=True)
 
             new_access_token = serializer.validated_data['access']
             new_refresh_token = serializer.validated_data['refresh']
 
+            # Cria resposta padrão
             response = Response(status=200)
 
-            # Criação dos novos cookies
+            # Define novos cookies
             cookie_service.create_cookie(
                 response, 'access_token', new_access_token, 7 * 24 * 60 * 60
             )
@@ -251,8 +275,8 @@ class TokenRefreshView(APIView):
 
             # Recupera usuário dono do refresh token
             user = TokenService.get_user_from_refresh_token(new_refresh_token)
-            
-            #User:admin
+
+            # User: Admin
             if hasattr(user, 'type') and user.type == 'admin':
                 response.data = {
                     'success': 'Tokens atualizados',
@@ -263,23 +287,29 @@ class TokenRefreshView(APIView):
                         'email': user.email,
                     }
                 }
-            #user: Estabelecimento
-            elif hasattr(user, 'name'): 
-                response.data = {
-                    'success': 'Tokens atualizados',
-                    'user_type': 'establishment',
-                    'user': {
-                        'id': user.id,
-                        'name': user.name,
-                        'email': user.user.email, 
-                        
+                return response
+
+            # User: Estabelecimento
+            elif hasattr(user, 'name'):
+                try:
+                    establishment_serializer = EstablishementSerializer(user)
+                    response.data = {
+                        'success': 'Tokens atualizados',
+                        'user_type': 'establishment',
+                        'user': establishment_serializer.data
                     }
-                }
+                    return response
+                except Establishment.DoesNotExist:
+                    return Response(
+                        {'error': 'Estabelecimento não encontrado para este usuário.'},
+                        status=404
+                    )
 
-            else:
-                raise AuthenticationFailed("Tipo de usuário inválido.")
-
-            return response
+            # Se tipo não reconhecido
+            return Response(
+                {'error': 'Tipo de usuário não reconhecido'},
+                status=400
+            )
 
         except AuthenticationFailed as e:
             return Response({'error': str(e)}, status=HTTP_401_UNAUTHORIZED)
