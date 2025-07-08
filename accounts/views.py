@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from accounts.models import Establishment, User
-from accounts.serializers import EstablishementSerializer, AdminCreateSerializer
+from accounts.serializers import EstablishmentSerializer, AdminCreateSerializer 
 from authentication.authentication import CookieJWTAuthentication
 from rest_framework.exceptions import NotFound, PermissionDenied, AuthenticationFailed, ValidationError
 from rest_framework.status import (
@@ -16,7 +16,7 @@ from rest_framework import status
 class EstablishmentListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Establishment.objects.all()
-    serializer_class = EstablishementSerializer
+    serializer_class = EstablishmentSerializer
     authentication_classes = [CookieJWTAuthentication]
 
     def get_permissions(self):
@@ -89,14 +89,13 @@ class EstablishmentListCreateView(ListCreateAPIView):
 
 
 class DetailEstablishment(RetrieveAPIView):
-    serializer_class = EstablishementSerializer
+    serializer_class = EstablishmentSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
     def get_object(self):
         try:
             pk = self.kwargs.get("pk")
-            print(pk)
 
             if self.request.user.id != pk:
                 raise PermissionDenied(
@@ -105,7 +104,6 @@ class DetailEstablishment(RetrieveAPIView):
                 )
 
             user = User.objects.get(id=pk)
-            print(user)
             establishment = Establishment.objects.get(user=user)
 
             return establishment
