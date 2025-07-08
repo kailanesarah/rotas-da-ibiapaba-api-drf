@@ -20,7 +20,7 @@ from authentication.services.cookie_service import CookieService
 from authentication.services.email_services import EmailService
 from authentication.services.password_reset_services import PasswordResetService
 
-from accounts.serializers import EstablishementSerializer
+from accounts.serializers import EstablishmentSerializer
 from accounts.models import Establishment, User
 
 # instancias
@@ -64,7 +64,7 @@ class CodeValidatorView(APIView):
 
                 # User: Estabelecimento
                 if establishment:
-                    establishment_serializer = EstablishementSerializer(
+                    establishment_serializer = EstablishmentSerializer(
                         establishment)
                     response.data = {
                         'success': 'Usuário autenticado com sucesso!',
@@ -292,7 +292,7 @@ class TokenRefreshView(APIView):
             # User: Estabelecimento
             elif hasattr(user, 'name'):
                 try:
-                    establishment_serializer = EstablishementSerializer(user)
+                    establishment_serializer = EstablishmentSerializer(user)
                     response.data = {
                         'success': 'Tokens atualizados',
                         'user_type': 'establishment',
