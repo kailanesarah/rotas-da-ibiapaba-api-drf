@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from categories.models import Category
-from photos.models import EstablishmentProfileImage
 
 STATE_CHOICES = (
     ("CE", "Ceará"),
@@ -112,11 +111,15 @@ class Establishment(models.Model):
         help_text="Chave Pix do estabelecimento (e-mail, telefone, CPF/CNPJ ou aleatória)"
     )
 
-    photos = models.OneToOneField(
-        EstablishmentProfileImage,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="establishment_photo"
-    )
+    def __str__(self):
+        return self.name
 
+    # Métodos de conveniência para acessar as fotos:
+    def get_profile_photo(self):
+        return self.photos.filter(is_profile_pic=True).first()
+
+    def get_gallery_photos(self):
+        return self.photos.filter(is_gallery_pic=True).all()
+
+    def get_product_photos(self):
+        return self.photos.filter(is_product_pic=True).all()
