@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from accounts.models import Location, Establishment, User, SocialMedia
 from categories.models import Category
+from photos.models import Photo
 from categories.serializers import CategorySerializer
-from photos.serializers import EstablishmentProfileImageSerializer
-from photos.models import EstablishmentProfileImage
+from photos.serializers import PhotoSerializer
 
 
 class AdminCreateSerializer(serializers.ModelSerializer):
@@ -13,14 +13,12 @@ class AdminCreateSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-
         user = User.objects.create_superuser(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
             type='admin'
         )
-
         return user
 
 
@@ -43,6 +41,15 @@ class EstablishmentCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+class PhotoSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(use_url=True)
+
+    class Meta:
+        model = Photo
+        fields = ['id', 'image', 'alt_text']
+        read_only_fields = ['id']
+
+
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
@@ -55,44 +62,61 @@ class SocialMediaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class EstablishementSerializer(serializers.ModelSerializer):
+class EstablishmentSerializer(serializers.ModelSerializer):
     user = EstablishmentCreateSerializer()
     location = LocationSerializer()
     social_media = SocialMediaSerializer()
-    photo = EstablishmentProfileImageSerializer(read_only=True)
 
-    # entrada de dados
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), many=True
     )
-
-    # para leitura de dados
     categories = CategorySerializer(
         many=True, read_only=True, source='category'
     )
 
+    profile_photo = serializers.SerializerMethodField()
+    gallery_photos = serializers.SerializerMethodField()
+    product_photos = serializers.SerializerMethodField()
+
     class Meta:
         model = Establishment
-        fields = '__all__'
+        fields = [
+            'id', 'user', 'name', 'description', 'cnpj',
+            'social_media', 'location', 'category', 'categories', 'pix_key',
+            'profile_photo', 'gallery_photos', 'product_photos'
+        ]
+
+    def get_profile_photo(self, obj):
+        profile_photo_instance = obj.get_profile_photo()
+        if profile_photo_instance:
+            return PhotoSerializer(profile_photo_instance, context=self.context).data
+        return None
+
+    def get_gallery_photos(self, obj):
+        gallery_photos_qs = obj.get_gallery_photos()
+        if gallery_photos_qs:
+            return PhotoSerializer(gallery_photos_qs, many=True, context=self.context).data
+        return None
+
+    def get_product_photos(self, obj):
+        product_photos_qs = obj.get_product_photos()
+        if product_photos_qs:
+            return PhotoSerializer(product_photos_qs, many=True, context=self.context).data
+        return None
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
         location_data = validated_data.pop('location')
         social_media_data = validated_data.pop('social_media', None)
-        photo_data = validated_data.pop('photo', None)
         category_ids = validated_data.pop('category')
 
-        # Criar usuário e localização
-        user = EstablishmentCreateSerializer.create(
-            EstablishmentCreateSerializer(), validated_data=user_data)
+        user = EstablishmentCreateSerializer().create(validated_data=user_data)
         location = Location.objects.create(**location_data)
 
-        # Criar social_media se existir
         social_media = None
         if social_media_data:
             social_media = SocialMedia.objects.create(**social_media_data)
 
-        # Criar o estabelecimento
         establishment = Establishment.objects.create(
             user=user,
             location=location,
@@ -100,13 +124,6 @@ class EstablishementSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
-        # Associar categorias
         establishment.category.set(category_ids)
-
-        # Criar foto se existir e associar
-        if photo_data:
-            photo = EstablishmentProfileImage.objects.create(**photo_data)
-            establishment.photo = photo
-            establishment.save()
 
         return establishment

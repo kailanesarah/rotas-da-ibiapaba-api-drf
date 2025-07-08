@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/v1/authentication/', include('authentication.urls')),
     path('api/v1/accounts/', include('accounts.urls')),
     path('api/v1/categories/', include('categories.urls')),
+    path('api/v1/photos/', include('photos.urls')),
     path('health/', health_check, name='health_check'),
 ]
 
