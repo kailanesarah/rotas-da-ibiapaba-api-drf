@@ -102,6 +102,16 @@ Certifique-se de configurar as seguintes variáveis de ambiente:
 
 ---
 
+---
+### Rotas de photos (`photos` app)
+
+| Método | Endpoint                       | Descrição                      |
+|--------|-------------------------------|-------------------------------|
+| PATCH   | `/api/v1/photos/profile-photo/upload/` | Atualiza foto de perfil do estabelecimento |
+| POST    | `/api/v1/photos/galery-photo/upload/`     | Sobe uma lista de fotos relacionadas ao estabelecimento |
+
+---
+
 
 ## 🚀 Como rodar a aplicação
 
