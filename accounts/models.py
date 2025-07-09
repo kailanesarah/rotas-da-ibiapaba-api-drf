@@ -54,6 +54,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+
 class Location(models.Model):
     country = models.CharField(max_length=100)
     state = models.CharField(choices=STATE_CHOICES, max_length=3)
@@ -63,6 +64,7 @@ class Location(models.Model):
     street = models.CharField(max_length=100)
     number = models.IntegerField(null=True)
     complement = models.CharField(blank=True, null=True, max_length=250)
+
 
 class SocialMedia(models.Model):
     whatsapp = models.CharField(max_length=20, blank=True, null=True,
@@ -75,35 +77,35 @@ class SocialMedia(models.Model):
 
 class Establishment(models.Model):
     user = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name="establishment_user"
     )
-    name = models.CharField(max_length=100) 
+    name = models.CharField(max_length=100)
 
     description = models.TextField(null=True, blank=True)
-    
+
     cnpj = models.CharField(max_length=14)
 
     social_media = models.ForeignKey(
-        SocialMedia, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        SocialMedia,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="establishments_social_media"
     )
 
     location = models.ForeignKey(
-        Location, 
-        on_delete=models.PROTECT, 
+        Location,
+        on_delete=models.PROTECT,
         related_name="establishment_location"
     )
-    
+
     category = models.ManyToManyField(
-        Category, 
+        Category,
         related_name="establishments_category"
     )
-    
+
     pix_key = models.CharField(
         max_length=100,
         null=True,
@@ -114,12 +116,11 @@ class Establishment(models.Model):
     def __str__(self):
         return self.name
 
-    # Métodos de conveniência para acessar as fotos:
     def get_profile_photo(self):
-        return self.photos.filter(is_profile_pic=True).first()
+        return self.photos.filter(type_photo='profile').first()
 
     def get_gallery_photos(self):
-        return self.photos.filter(is_gallery_pic=True).all()
+        return self.photos.filter(type_photo='gallery').all()
 
     def get_product_photos(self):
-        return self.photos.filter(is_product_pic=True).all()
+        return self.photos.filter(type_photo='product').all()
