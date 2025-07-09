@@ -3,8 +3,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from photos.models import Photo, upload_to_path
+from photos.models import Photo
 from accounts.models import Establishment
+from django.db import IntegrityError
 
 
 class ProfilePhotoUploadView(APIView):
@@ -14,47 +15,37 @@ class ProfilePhotoUploadView(APIView):
     def post(self, request):
         try:
             image = request.FILES.get('photo')
-
             alt_text = request.data.get('alt_text', '')
-            is_profile = request.data.get('is_profile') == 'true'
-            is_gallery = request.data.get('is_gallery') == 'true'
-            is_product = request.data.get('is_product') == 'true'
+            type_photo = request.data.get('type_photo')
 
             if not image:
                 return Response({'error': 'Nenhuma imagem enviada.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # checa quantos itens foram marcados ao mesmo tempo
-            flags = [is_profile, is_gallery, is_product]
-            if flags.count(True) > 1:
-                return Response({'error': 'Apenas um tipo de foto pode ser marcado por vez.'}, status=status.HTTP_400_BAD_REQUEST)
-            if flags.count(True) == 0:
-                return Response({'error': 'Você deve informar um tipo de foto.'}, status=status.HTTP_400_BAD_REQUEST)
+            if type_photo not in ['profile', 'gallery', 'product']:
+                return Response({'error': 'Tipo de foto inválido.'}, status=status.HTTP_400_BAD_REQUEST)
 
             establishment = Establishment.objects.get(user=request.user)
 
-            if is_profile:
-                Photo.objects.filter(establishment=establishment, is_profile_pic=True).update(
-                    is_profile_pic=False)
+            if type_photo == 'profile':
+                # Apaga a foto anterior de perfil
+                Photo.objects.filter(
+                    establishment=establishment, type_photo='profile').delete()
 
             photo = Photo.objects.create(
                 establishment=establishment,
                 image=image,
                 alt_text=alt_text,
-                is_profile_pic=is_profile,
-                is_gallery_pic=is_gallery,
-                is_product_pic=is_product
+                type_photo=type_photo
             )
 
-            tipo = 'perfil' if is_profile else 'galeria' if is_gallery else 'produto'
-            url = photo.image.url
-
             return Response({
-                'message': 'Foto enviada com sucesso.',
-                'photo_id': photo.id,
-                'type': tipo,
-                'url_img': url
+                'message': 'Foto de perfil enviada com sucesso.',
+                'type': type_photo,
+                'url_img': photo.image.url
             }, status=status.HTTP_201_CREATED)
 
+        except IntegrityError:
+            return Response({'error': 'Já existe uma foto de perfil para este estabelecimento.'}, status=status.HTTP_400_BAD_REQUEST)
         except Establishment.DoesNotExist:
             return Response({'error': 'Estabelecimento não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -67,17 +58,17 @@ class GalleryPhotoUploadView(APIView):
 
     def post(self, request):
         try:
-            # getlist para múltiplos arquivos
             images = request.FILES.getlist('photos')
             alt_text = request.data.get('alt_text', '')
+            type_photo = request.data.get('type_photo')
 
             if not images:
                 return Response({'error': 'Nenhuma imagem enviada.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                establishment = Establishment.objects.get(user=request.user)
-            except Establishment.DoesNotExist:
-                return Response({'error': 'Estabelecimento não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+            if type_photo not in ['profile', 'gallery', 'product']:
+                return Response({'error': 'Tipo de foto inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            establishment = Establishment.objects.get(user=request.user)
 
             photos_created = []
             url_photos = []
@@ -87,20 +78,18 @@ class GalleryPhotoUploadView(APIView):
                     establishment=establishment,
                     image=image,
                     alt_text=alt_text,
-                    is_gallery_pic=True,
-                    is_profile_pic=False,
-                    is_product_pic=False
+                    type_photo='gallery'
                 )
                 photos_created.append(photo.id)
                 url_photos.append(photo.image.url)
 
             return Response({
                 'message': f'{len(photos_created)} fotos enviadas com sucesso.',
-                'photo_ids': photos_created,
+                'type': 'gallery',
                 'url_photos': url_photos,
-                'type': 'galeria'
-
+                
             }, status=status.HTTP_201_CREATED)
+
         except Establishment.DoesNotExist:
             return Response({'error': 'Estabelecimento não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
