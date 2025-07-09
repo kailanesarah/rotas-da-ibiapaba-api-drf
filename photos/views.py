@@ -3,8 +3,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from photos.models import Photo
+from photos.models import Photo, upload_to_path
 from accounts.models import Establishment
+
 
 class ProfilePhotoUploadView(APIView):
     permission_classes = [IsAuthenticated]
@@ -45,11 +46,13 @@ class ProfilePhotoUploadView(APIView):
             )
 
             tipo = 'perfil' if is_profile else 'galeria' if is_gallery else 'produto'
+            url = photo.image.url
 
             return Response({
                 'message': 'Foto enviada com sucesso.',
                 'photo_id': photo.id,
-                'type': tipo
+                'type': tipo,
+                'url_img': url
             }, status=status.HTTP_201_CREATED)
 
         except Establishment.DoesNotExist:
@@ -77,6 +80,7 @@ class GalleryPhotoUploadView(APIView):
                 return Response({'error': 'Estabelecimento não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
             photos_created = []
+            url_photos = []
 
             for image in images:
                 photo = Photo.objects.create(
@@ -88,11 +92,14 @@ class GalleryPhotoUploadView(APIView):
                     is_product_pic=False
                 )
                 photos_created.append(photo.id)
+                url_photos.append(photo.image.url)
 
             return Response({
                 'message': f'{len(photos_created)} fotos enviadas com sucesso.',
                 'photo_ids': photos_created,
+                'url_photos': url_photos,
                 'type': 'galeria'
+
             }, status=status.HTTP_201_CREATED)
         except Establishment.DoesNotExist:
             return Response({'error': 'Estabelecimento não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
