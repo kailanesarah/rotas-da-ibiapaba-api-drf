@@ -6,6 +6,7 @@ from rest_framework import status
 from photos.models import Photo
 from accounts.models import Establishment
 from django.db import IntegrityError
+from photos.serializers import PhotoSerializer
 
 
 class ProfilePhotoUploadView(APIView):
@@ -14,42 +15,34 @@ class ProfilePhotoUploadView(APIView):
 
     def post(self, request):
         try:
-            image = request.FILES.get('photo')
-            alt_text = request.data.get('alt_text', '')
-            type_photo = request.data.get('type_photo')
-
-            if not image:
-                return Response({'error': 'Nenhuma imagem enviada.'}, status=status.HTTP_400_BAD_REQUEST)
-
-            if type_photo not in ['profile', 'gallery', 'product']:
-                return Response({'error': 'Tipo de foto inválido.'}, status=status.HTTP_400_BAD_REQUEST)
-
             establishment = Establishment.objects.get(user=request.user)
+            data = request.data.copy()
 
-            if type_photo == 'profile':
-                # Apaga a foto anterior de perfil
-                Photo.objects.filter(
-                    establishment=establishment, type_photo='profile').delete()
+            serializer = PhotoSerializer(data=data)
 
-            photo = Photo.objects.create(
-                establishment=establishment,
-                image=image,
-                alt_text=alt_text,
-                type_photo=type_photo
-            )
+            if serializer.is_valid():
+                if data.get('type_photo') == 'profile':
+                    Photo.objects.filter(
+                        establishment=establishment,
+                        type_photo='profile'
+                    ).delete()
 
-            return Response({
-                'message': 'Foto de perfil enviada com sucesso.',
-                'type': type_photo,
-                'url_img': photo.image.url
-            }, status=status.HTTP_201_CREATED)
+                photo = serializer.save(establishment=establishment)
 
-        except IntegrityError:
-            return Response({'error': 'Já existe uma foto de perfil para este estabelecimento.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'message': 'Foto de perfil enviada com sucesso.',
+                    'type': photo.type_photo,
+                    'url_img': photo.image.url
+                }, status=status.HTTP_201_CREATED)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         except Establishment.DoesNotExist:
             return Response({'error': 'Estabelecimento não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        except IntegrityError:
+            return Response({'error': 'Já existe uma foto de perfil para este estabelecimento.'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': f'Ocorreu um erro inesperado: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': f'Ocorreu um erro inesperado: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class GalleryPhotoUploadView(APIView):
@@ -58,36 +51,36 @@ class GalleryPhotoUploadView(APIView):
 
     def post(self, request):
         try:
-            images = request.FILES.getlist('photos')
-            alt_text = request.data.get('alt_text', '')
-            type_photo = request.data.get('type_photo')
-
-            if not images:
-                return Response({'error': 'Nenhuma imagem enviada.'}, status=status.HTTP_400_BAD_REQUEST)
-
-            if type_photo not in ['profile', 'gallery', 'product']:
-                return Response({'error': 'Tipo de foto inválido.'}, status=status.HTTP_400_BAD_REQUEST)
-
             establishment = Establishment.objects.get(user=request.user)
+            data = request.data.copy()
+            images = request.FILES.getlist('images')
+            print(data)
 
             photos_created = []
             url_photos = []
 
             for image in images:
-                photo = Photo.objects.create(
-                    establishment=establishment,
-                    image=image,
-                    alt_text=alt_text,
-                    type_photo='gallery'
-                )
-                photos_created.append(photo.id)
-                url_photos.append(photo.image.url)
+                data = {
+                    'image': image,
+                    'type_photo': data['type_photo']
+                }
+
+                serializer = PhotoSerializer(data=data)
+
+                if serializer.is_valid():
+                    photo = serializer.save(establishment=establishment)
+                    photos_created.append(photo.id)
+                    url_photos.append(photo.image.url)
+                else:
+                    return Response({
+                        'error': 'Erro ao validar imagem.',
+                        'details': serializer.errors
+                    }, status=status.HTTP_400_BAD_REQUEST)
 
             return Response({
-                'message': f'{len(photos_created)} fotos enviadas com sucesso.',
+                'message': f'{len(photos_created)} fotos da galeria enviadas com sucesso.',
                 'type': 'gallery',
-                'url_photos': url_photos,
-                
+                'url_photos': url_photos
             }, status=status.HTTP_201_CREATED)
 
         except Establishment.DoesNotExist:
