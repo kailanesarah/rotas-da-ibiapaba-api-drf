@@ -5,9 +5,11 @@ from django.utils.text import slugify
 
 
 def upload_to_path(instance, filename):
-    folder = instance.type_photo if instance.type_photo in ['profile', 'gallery', 'product'] else 'others'
+    folder = instance.type_photo if instance.type_photo in [
+        'profile', 'gallery', 'product'] else 'others'
     establishment_name = slugify(instance.establishment.name)
     return f'photos/{folder}/{establishment_name}/{filename}'
+
 
 class Photo(models.Model):
     PROFILE = "profile"
@@ -26,11 +28,13 @@ class Photo(models.Model):
         related_name='photos',
         verbose_name="Estabelecimento"
     )
-    image = models.ImageField(upload_to=upload_to_path, blank=True, null=True)
-    alt_text = models.CharField("Texto alternativo", max_length=255, blank=True, null=True)
+    image = models.ImageField(upload_to=upload_to_path)
+    alt_text = models.CharField(
+        "Texto alternativo", max_length=255, blank=True, null=True)
     created_at = models.DateTimeField("Criado em", auto_now_add=True)
     updated_at = models.DateTimeField("Atualizado em", auto_now=True)
-    type_photo = models.CharField("Tipo da foto", max_length=20, choices=PHOTO_TYPES)
+    type_photo = models.CharField(
+        "Tipo da foto", max_length=20, choices=PHOTO_TYPES)
 
     class Meta:
         indexes = [
