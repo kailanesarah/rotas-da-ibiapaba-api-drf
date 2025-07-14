@@ -1,10 +1,13 @@
+import os
 from django.db import models
 from accounts.models import Establishment
+from django.utils.text import slugify
 
 
 def upload_to_path(instance, filename):
     folder = instance.type_photo if instance.type_photo in ['profile', 'gallery', 'product'] else 'others'
-    return f'photos/{instance.establishment.id}/{folder}/{filename}'
+    establishment_name = slugify(instance.establishment.name)
+    return f'photos/{folder}/{establishment_name}/{filename}'
 
 class Photo(models.Model):
     PROFILE = "profile"
