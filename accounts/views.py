@@ -1,14 +1,13 @@
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
 from accounts.models import Establishment, User
-from accounts.serializers import EstablishmentSerializer, AdminCreateSerializer 
+from accounts.serializers import EstablishmentSerializer, AdminCreateSerializer
+from accounts.signals import rename_establishment_folder
 from authentication.authentication import CookieJWTAuthentication
 from rest_framework.exceptions import NotFound, PermissionDenied, AuthenticationFailed, ValidationError
 from rest_framework.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN
+    HTTP_400_BAD_REQUEST
 )
 from rest_framework import status
 
@@ -24,7 +23,7 @@ class EstablishmentListCreateView(ListCreateAPIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
-    def list(self, request):
+    def list(self):
         try:
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
@@ -88,24 +87,15 @@ class EstablishmentListCreateView(ListCreateAPIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class DetailEstablishment(RetrieveAPIView):
+class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = Establishment.objects.all()
     serializer_class = EstablishmentSerializer
-    permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
     def get_object(self):
         try:
-            pk = self.kwargs.get("pk")
-
-            if self.request.user.id != pk:
-                raise PermissionDenied(
-                    detail="Você não tem permissão para acessar os dados de outro usuário.",
-                    code=HTTP_403_FORBIDDEN
-                )
-
-            user = User.objects.get(id=pk)
-            establishment = Establishment.objects.get(user=user)
-
+            establishment = Establishment.objects.get(user=self.request.user)
             return establishment
 
         except User.DoesNotExist:
@@ -122,6 +112,63 @@ class DetailEstablishment(RetrieveAPIView):
             raise auth_error
         except PermissionDenied as permission_error:
             raise permission_error
+
+    def put(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=True)
+
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+
+            return Response({
+                "message": {
+                    "title": "Dados do usuário atualizados com sucesso!",
+                    "text": "As informações foram atualizadas corretamente.",
+                },
+                "success": True,
+                "status": status.HTTP_200_OK,
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "message": {
+                    "title": "Erro ao atualizar os dados usuário",
+                    "text": str(e),
+                },
+                "success": False,
+                "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "data": []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response({
+                "message": {
+                    "title": "Usuário excluído com sucesso",
+                    "text": "Os dados do usuário serão excluidos de forma " +
+                    "permanente em 30 dias. Caso queira reabrir a conta, entre " +
+                    "em contato com nosso suporte. Abraços NexTech!",
+                },
+                "success": True,
+                "status": status.HTTP_204_NO_CONTENT,
+                "data": []
+            }, status=status.HTTP_204_NO_CONTENT)
+
+        except Exception as e:
+            return Response({
+                "message": {
+                    "title": "Erro ao excluir os dados usuário",
+                    "text": str(e),
+                },
+                "success": False,
+                "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "data": []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AdminListCreateView(ListCreateAPIView):
