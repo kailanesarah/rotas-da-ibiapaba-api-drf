@@ -127,3 +127,48 @@ class EstablishmentSerializer(serializers.ModelSerializer):
         establishment.category.set(category_ids)
 
         return establishment
+    
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', None)
+        location_data = validated_data.pop('location', None)
+        social_media_data = validated_data.pop('social_media', None)
+        category_ids = validated_data.pop('category', None)
+
+        # Atualiza os campos simples do Establishment
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Atualiza o User aninhado
+        if user_data:
+            user = instance.user
+            for attr, value in user_data.items():
+                if attr == 'password':
+                    user.set_password(value)
+                else:
+                    setattr(user, attr, value)
+            user.save()
+
+        # Atualiza a Location aninhada
+        if location_data:
+            location = instance.location
+            for attr, value in location_data.items():
+                setattr(location, attr, value)
+            location.save()
+
+        # Atualiza ou cria SocialMedia
+        if social_media_data:
+            if instance.social_media:
+                social_media = instance.social_media
+                for attr, value in social_media_data.items():
+                    setattr(social_media, attr, value)
+                social_media.save()
+            else:
+                social_media = SocialMedia.objects.create(**social_media_data)
+                instance.social_media = social_media
+
+        # Atualiza categorias
+        if category_ids is not None:
+            instance.category.set(category_ids)
+
+        instance.save()
+        return instance
