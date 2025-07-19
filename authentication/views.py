@@ -1,6 +1,10 @@
+from rest_framework import status
 from django.contrib.auth import login, logout
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -16,6 +20,9 @@ from authentication.services.password_reset_services import PasswordResetService
 from authentication.services.tokens_services import TokenService
 from authentication.services.verification_services import VerificationService
 
+from accounts.serializers import EstablishmentSerializer
+from accounts.models import Establishment, User
+
 # instancias
 token_service = TokenService()
 verification_service = VerificationService()
@@ -25,14 +32,17 @@ cookie_service = CookieService()
 
 
 class CodeValidatorView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
         try:
             email_user = request.data.get("email")
             code_user = request.data.get("code")
 
-            # verifica usuário
+            # Verifica usuário pelo email
             user = verification_service.get_user_by_email(email_user)
+            user_obj = User.objects.get(email=email_user)
+            establishment = Establishment.objects.filter(user=user_obj).first()
 
             # Verifica código
             code_verification_result = verification_service.verify_code(
@@ -40,8 +50,8 @@ class CodeValidatorView(APIView):
             )
             if code_verification_result == 0:
                 return Response(
-                    {"error": "Código incorreto, tente novamente"},
-                    status=HTTP_401_UNAUTHORIZED,
+                    {'error': 'Código incorreto, tente novamente'},
+                    status=status.HTTP_401_UNAUTHORIZED
                 )
 
             try:
@@ -50,40 +60,53 @@ class CodeValidatorView(APIView):
                 access_token = tokens["access"]
                 refresh_token = tokens["refresh"]
 
-                # Prepara resposta
-                response = Response(
-                    {
-                        "success": "Código verificado com sucesso",
-                        "user_id": user.id,
-                        "email": user.email,
-                    },
-                    status=HTTP_200_OK,
-                )
+                # Cria resposta vazia
+                response = Response(status=200)
+
+                # User: Estabelecimento
+                if establishment:
+                    establishment_serializer = EstablishmentSerializer(
+                        establishment)
+                    response.data = {
+                        'success': 'Usuário autenticado com sucesso!',
+                        'user_type': 'establishment',
+                        'user': establishment_serializer.data
+                    }
+                else:
+                    # User:Admin
+                    if hasattr(user, 'type'):
+                        response.data = {
+                            'success': 'Usuário autenticado com sucesso!',
+                            'user_type': user.type,
+                            'user': {
+                                'id': user.id,
+                                'email': user.email
+                            }
+                        }
 
                 # Cria cookies para os tokens
                 cookie_service.create_cookie(
-                    response, "access_token", access_token, 3 * 4
-                )
+                    response, 'access_token', access_token, 7 * 24 * 60 * 60)
                 cookie_service.create_cookie(
-                    response, "refresh_token", refresh_token, 7 * 24 * 60 * 60
-                )  # 7 dias
+                    response, 'refresh_token', refresh_token, 7 * 24 * 60 * 60)
 
                 return response
 
             except KeyError as e:
                 return Response(
-                    {"error": f"Token não encontrado na resposta: {str(e)}"},
-                    status=HTTP_500_INTERNAL_SERVER_ERROR,
+                    {'error': f'Token não encontrado na resposta: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
         except Exception as e:
-            return Response(
-                {"error": "Erro na tentativa de validar o codigo", "detail": str(e)},
-                status=HTTP_400_BAD_REQUEST,
-            )
+            return Response({
+                'error': 'Erro na tentativa de validar o código',
+                'detail': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
         try:
@@ -103,7 +126,7 @@ class LoginView(APIView):
                     "Se tiver alguma dúvida, estamos aqui para ajudar.\n\n"
                     "Equipe Rotas da Ibiapaba"
                 )
-                # Corrigido para usar user.email
+
                 email_service.send_email(subject, body, user.email)
 
                 return Response(
@@ -145,6 +168,7 @@ class LogoutView(APIView):
 
 
 class PasswordResetView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
         try:
@@ -183,6 +207,7 @@ class PasswordResetView(APIView):
 
 
 class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
 
     def patch(self, request):
         try:
@@ -215,6 +240,8 @@ class PasswordResetConfirmView(APIView):
 
 
 class ResendCodeView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         try:
             email_user = request.data.get("email")
@@ -235,17 +262,82 @@ class ResendCodeView(APIView):
             )
 
             email_service.send_email(subject, body, user.email)
-
-            return Response(
-                {
-                    "message": f"Código reenviado com sucesso para o usuário: {email_user}"
-                },
-                status=HTTP_200_OK,
-            )
+            return Response({'message': f'Código reenviado com sucesso para o usuário: {email_user}'}, status=HTTP_200_OK)
 
         except Exception as e:
 
+            return Response({'error': 'Erro ao processar a requisição', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
+
+
+class TokenRefreshView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get('refresh_token')
+
+            if not refresh_token:
+                raise AuthenticationFailed('Refresh token não encontrado.')
+
+            serializer = TokenRefreshSerializer(
+                data={'refresh': refresh_token})
+            serializer.is_valid(raise_exception=True)
+
+            new_access_token = serializer.validated_data['access']
+            new_refresh_token = serializer.validated_data['refresh']
+
+            # Cria resposta padrão
+            response = Response(status=200)
+
+            # Define novos cookies
+            cookie_service.create_cookie(
+                response, 'access_token', new_access_token, 7 * 24 * 60 * 60
+            )
+            cookie_service.create_cookie(
+                response, 'refresh_token', new_refresh_token, 7 * 24 * 60 * 60
+            )
+
+            # Recupera usuário dono do refresh token
+            user = TokenService.get_user_from_refresh_token(new_refresh_token)
+
+            # User: Admin
+            if hasattr(user, 'type') and user.type == 'admin':
+                response.data = {
+                    'success': 'Tokens atualizados',
+                    'user_type': 'admin',
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                    }
+                }
+                return response
+
+            # User: Estabelecimento
+            elif hasattr(user, 'name'):
+                try:
+                    establishment_serializer = EstablishmentSerializer(user)
+                    response.data = {
+                        'success': 'Tokens atualizados',
+                        'user_type': 'establishment',
+                        'user': establishment_serializer.data
+                    }
+                    return response
+                except Establishment.DoesNotExist:
+                    return Response(
+                        {'error': 'Estabelecimento não encontrado para este usuário.'},
+                        status=404
+                    )
+
+            # Se tipo não reconhecido
             return Response(
-                {"error": "Erro ao processar a requisição", "detail": str(e)},
-                status=HTTP_400_BAD_REQUEST,
+                {'error': 'Tipo de usuário não reconhecido'},
+                status=400
+            )
+
+        except AuthenticationFailed as e:
+            return Response({'error': str(e)}, status=HTTP_401_UNAUTHORIZED)
+
+        except Exception as e:
+            return Response(
+                {'error': 'Erro ao atualizar tokens', 'detail': str(e)},
+                status=HTTP_400_BAD_REQUEST
             )
