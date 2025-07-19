@@ -1,8 +1,10 @@
+
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from accounts.models import Establishment, User
 from accounts.serializers import EstablishmentSerializer, AdminCreateSerializer 
+
 from authentication.authentication import CookieJWTAuthentication
 from rest_framework.exceptions import NotFound, PermissionDenied, AuthenticationFailed, ValidationError
 from rest_framework.status import (
@@ -20,7 +22,7 @@ class EstablishmentListCreateView(ListCreateAPIView):
     authentication_classes = [CookieJWTAuthentication]
 
     def get_permissions(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return [AllowAny()]
         return [IsAuthenticated()]
 
@@ -131,7 +133,7 @@ class AdminListCreateView(ListCreateAPIView):
     authentication_classes = [CookieJWTAuthentication]
 
     def get_permissions(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return [AllowAny()]
         return [IsAuthenticated()]
 
