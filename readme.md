@@ -31,7 +31,6 @@ Utilizamos o **Django REST Framework (DRF)** em conjunto com o pacote `djangores
 - **Renovação de Tokens JWT (Access e Refresh)**  
   Geração de novos tokens JWT e atualização automática nos cookies do usuário.
 
-
 ---
 
 ## 🚀 Tecnologias Utilizadas
@@ -63,7 +62,6 @@ Certifique-se de configurar as seguintes variáveis de ambiente:
 - `BASE_URL` — URL base da API (ex: `http://localhost:8000`)
 - `URL_FRONT` — URL do front-end que receberá os links de redefinição de senha e outros fluxos
 
-
 ---
 
 ## 🔀 Estrutura de Rotas Principais
@@ -93,14 +91,13 @@ Certifique-se de configurar as seguintes variáveis de ambiente:
 | POST   | `/api/v1/accounts/admin/`         | Criar novo administrador           |
 
 ---
+
 ### Rotas de categorias (`categories` app)
 
-| Método | Endpoint                       | Descrição                      |
-|--------|-------------------------------|-------------------------------|
-| POST   | `/api/v1/categories/categorie/` | Registro de nova categoria |
-| GET    | `/api/v1/categories/categorie/`     | Listar categorias registradas |
-
----
+| Método | Endpoint                        | Descrição                     |
+| ------ | ------------------------------- | ----------------------------- |
+| POST   | `/api/v1/categories/categorie/` | Registro de nova categoria    |
+| GET    | `/api/v1/categories/categorie/` | Listar categorias registradas |
 
 ---
 ### Rotas de photos (`photos` app)
@@ -155,6 +152,7 @@ Certifique-se de configurar as seguintes variáveis de ambiente:
 ```
 
 6. Rode o servidor de desenvolvimento:
+
 ```bash
     python manage.py runserver
 ```
@@ -194,6 +192,60 @@ Importe esse arquivo na sua ferramenta favorita (Postman, API Dog, Insomnia) par
 - A implementação de uma **blacklist para invalidação imediata** dos tokens não está presente nesta versão da API, mas é uma melhoria planejada.
 - Este é apenas o início do projeto; funcionalidades adicionais, como controle de autorização, permissões específicas e testes automatizados, serão implementadas em breve.
   
+
+## Executando TESTES automatizados
+
+- **Para executar TODOS os testes:**
+
+```bash
+pytest
+
+```
+
+- **Para executar APENAS os testes unitários:**
+
+```bash
+pytest -m unit
+
+```
+
+- **Para executar APENAS os testes de integração:**
+
+```bash
+pytest -m integration
+
+```
+
+- **Para executar TODOS os testes, EXCETO os de integração:**
+
+```bash
+pytest -m "not integration"
+
+```
+
+## Verificar a cobertura de testes
+
+```bash
+pytest --cov=your_app
+
+# Ex: pytest --cov=authentication
+
+```
+
+### Arquivo Postman
+
+Para facilitar, disponibilizamos um arquivo Postman com todas as requisições configuradas, incluindo os dados dos corpos (body). Importe esse arquivo na sua ferramenta para começar a testar rapidamente.
+
+## Observações importantes sobre autenticação e logout
+
+- Os tokens JWT são enviados e armazenados via cookies HTTP-only para segurança.
+- Após a validação do código, as rotas serão autenticadas via cookies
+- O access token tem validade curta para proteger o sistema contra acessos não autorizados.
+- O refresh token é usado para renovar o access token sem que o usuário precise logar novamente.
+- No logout, os cookies contendo os tokens são removidos, mas os tokens não são invalidados no servidor e continuam válidos até expirarem.
+- Para implementar invalidação imediata de tokens, seria necessário um mecanismo de blacklist, que não está presente nesta versão da API.
+- Este é apenas o começo do projeto, outras funcionalidades como autorização, permissões específicas e testes serão implementadas em breve.
+
 ---
 
 ## 📄 Licença
@@ -201,6 +253,7 @@ Importe esse arquivo na sua ferramenta favorita (Postman, API Dog, Insomnia) par
 Este software é propriedade exclusiva da NexTech - Soluções em software.  
 Todo o código-fonte, documentação e materiais relacionados são confidenciais e protegidos por leis de direitos autorais.  
 Nenhuma parte deste software pode ser reproduzida, distribuída ou utilizada sem a autorização expressa e por escrito da NexTech - Soluções em software.  
+
 
 Para mais informações ou solicitações de uso, entre em contato com a equipe responsável.
 

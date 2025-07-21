@@ -34,3 +34,14 @@ Thumbs.db
 # Migrations
 # **/migrations/*.py
 # !**/migrations/__init__.py
+
+#pytest
+.pytest_cache/
+.cache
+
+# Coverage reports
+htmlcov/
+.coverage
+
+
+
