@@ -10,7 +10,7 @@ from rest_framework.status import (
 class VerificationService:
 
     def generate_code(self):
-        code = pyotp.TOTP(pyotp.random_base32(), interval=300)
+        code = pyotp.TOTP(pyotp.random_base32(), interval=300, digits=5)
         return code.now()
 
     def save_code(self, code, user_email):
