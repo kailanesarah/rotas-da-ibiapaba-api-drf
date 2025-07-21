@@ -12,11 +12,8 @@ class CategoriesListCreateView(ListCreateAPIView):
     authentication_classes = [CookieJWTAuthentication]
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
+    permission_classes = [AllowAny]
 
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [AllowAny()]
-        return [IsAuthenticated()]
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
