@@ -1,9 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from accounts.models import Establishment, User
 from accounts.serializers import EstablishmentSerializer, AdminCreateSerializer
-from accounts.signals import rename_establishment_folder
 from authentication.authentication import CookieJWTAuthentication
 from rest_framework.exceptions import NotFound, PermissionDenied, AuthenticationFailed, ValidationError
 from rest_framework.status import (
