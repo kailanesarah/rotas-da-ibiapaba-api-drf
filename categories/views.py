@@ -41,10 +41,3 @@ class CategoriesListCreateView(ListCreateAPIView):
             },
             status=status.HTTP_201_CREATED,
         )
-
-
-# return Response({
-#     "success": True,
-#     "message": "Categoria criada com sucesso.",
-#     "data": # {...} [...] ou null
-# })

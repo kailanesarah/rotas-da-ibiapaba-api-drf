@@ -22,8 +22,13 @@ class EstablishmentListCreateView(ListCreateAPIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
-    def list(self):
+    def list(self, request, *args, **kwargs):
         try:
+            user = request.user
+            
+            if not hasattr(user, 'type') or user.type != 'admin':
+                raise PermissionDenied("Você não tem permissão para acessar essa informação.")
+            
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
             return Response({
@@ -181,7 +186,7 @@ class AdminListCreateView(ListCreateAPIView):
             return [AllowAny()]
         return [IsAuthenticated()]
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         try:
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
