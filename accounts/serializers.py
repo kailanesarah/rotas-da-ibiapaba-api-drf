@@ -45,7 +45,6 @@ class EstablishmentCreateSerializer(serializers.ModelSerializer):
         return user
 
 
-# ✅ NOVO Serializer para leitura (com username)
 class EstablishmentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
