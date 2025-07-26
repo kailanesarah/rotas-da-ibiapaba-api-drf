@@ -4,7 +4,6 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from accounts.models import Establishment
 from photos.models import Photo
 from photos.serializers import PhotoSerializer
@@ -66,7 +65,6 @@ class GalleryPhotoUploadView(APIView):
             establishment = Establishment.objects.get(user=request.user)
             data = request.data.copy()
             images = request.FILES.getlist("images")
-            print(data)
 
             photos_created = []
             url_photos = []

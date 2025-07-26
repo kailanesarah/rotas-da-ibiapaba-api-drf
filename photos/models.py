@@ -5,10 +5,10 @@ from django.utils.text import slugify
 
 
 def upload_to_path(instance, filename):
-    folder = instance.type_photo if instance.type_photo in [
-        'profile', 'gallery', 'product'] else 'others'
-    establishment_name = slugify(instance.establishment.name)
-    return f'photos/{folder}/{establishment_name}/{filename}'
+    folder = instance.type_photo if instance.type_photo in ['profile', 'gallery', 'product'] else 'others'
+    establishment_username = instance.establishment.user.username
+    establishment_pk = instance.establishment.pk
+    return f'photos/{folder}/{establishment_pk}_{establishment_username}/{filename}'
 
 
 class Photo(models.Model):
