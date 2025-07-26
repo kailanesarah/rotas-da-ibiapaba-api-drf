@@ -4,7 +4,9 @@ from categories.models import Category
 from photos.models import Photo
 from categories.serializers import CategorySerializer
 from photos.serializers import PhotoSerializer
-
+from accounts.utils import GenerateUniqueName
+from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 
 class AdminCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,8 +27,10 @@ class AdminCreateSerializer(serializers.ModelSerializer):
 class EstablishmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
     def create(self, validated_data):
         user = User(
@@ -41,37 +45,53 @@ class EstablishmentCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+class EstablishmentUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username']
+
+
 class PhotoSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True)
 
     class Meta:
         model = Photo
-        fields = ['id', 'image', 'alt_text']
+        fields = [ 'image', 'alt_text']
         read_only_fields = ['id']
 
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
-        fields = '__all__'
+        fields = [
+            'country', 'state', 'city', 'CEP',
+            'neighborhood', 'street', 'number', 'complement'
+        ]
 
 
 class SocialMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialMedia
-        fields = '__all__'
+        fields = ['whatsapp', 'instagram', 'facebook']
 
 
 class EstablishmentSerializer(serializers.ModelSerializer):
-    user = EstablishmentCreateSerializer()
+    user = EstablishmentUserSerializer(read_only=True)
     location = LocationSerializer()
     social_media = SocialMediaSerializer()
 
+    # INPUT
     category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), many=True
+        queryset=Category.objects.all(),
+        many=True,
+        write_only=True
     )
+
+    # OUTPUT
     categories = CategorySerializer(
-        many=True, read_only=True, source='category'
+        many=True,
+        read_only=True,
+        source='category'
     )
 
     profile_photo = serializers.SerializerMethodField()
@@ -82,7 +102,10 @@ class EstablishmentSerializer(serializers.ModelSerializer):
         model = Establishment
         fields = [
             'id', 'user', 'name', 'description', 'cnpj',
-            'social_media', 'location', 'category', 'categories', 'pix_key',
+            'social_media', 'location',
+            'category',
+            'categories',
+            'pix_key',
             'profile_photo', 'gallery_photos', 'product_photos'
         ]
 
@@ -110,6 +133,10 @@ class EstablishmentSerializer(serializers.ModelSerializer):
         social_media_data = validated_data.pop('social_media', None)
         category_ids = validated_data.pop('category')
 
+        base_name = validated_data.get('name', 'estabelecimento')
+        username = GenerateUniqueName().generate_unique_username(base_name)
+        user_data['username'] = username
+
         user = EstablishmentCreateSerializer().create(validated_data=user_data)
         location = Location.objects.create(**location_data)
 
@@ -127,18 +154,33 @@ class EstablishmentSerializer(serializers.ModelSerializer):
         establishment.category.set(category_ids)
 
         return establishment
-    
+
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', None)
         location_data = validated_data.pop('location', None)
         social_media_data = validated_data.pop('social_media', None)
         category_ids = validated_data.pop('category', None)
 
-        # Atualiza os campos simples do Establishment
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+        old_username = instance.user.username
+        old_name = instance.name
 
-        # Atualiza o User aninhado
+        new_name = validated_data.get('name')
+        if new_name and new_name != old_name:
+            slugified_name = slugify(new_name).replace('-', '_')
+            new_username = slugified_name
+
+            User = get_user_model()
+            original_username = new_username
+            counter = 1
+            while User.objects.filter(username=new_username).exclude(pk=instance.user.pk).exists():
+                new_username = f"{original_username}_{counter}"
+                counter += 1
+
+            instance.user.username = new_username
+            instance.user.save()
+
+            GenerateUniqueName.rename_establishment_folders(instance.pk, old_username, new_username)
+
         if user_data:
             user = instance.user
             for attr, value in user_data.items():
@@ -148,14 +190,12 @@ class EstablishmentSerializer(serializers.ModelSerializer):
                     setattr(user, attr, value)
             user.save()
 
-        # Atualiza a Location aninhada
         if location_data:
             location = instance.location
             for attr, value in location_data.items():
                 setattr(location, attr, value)
             location.save()
 
-        # Atualiza ou cria SocialMedia
         if social_media_data:
             if instance.social_media:
                 social_media = instance.social_media
@@ -166,9 +206,11 @@ class EstablishmentSerializer(serializers.ModelSerializer):
                 social_media = SocialMedia.objects.create(**social_media_data)
                 instance.social_media = social_media
 
-        # Atualiza categorias
         if category_ids is not None:
             instance.category.set(category_ids)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
 
         instance.save()
         return instance
