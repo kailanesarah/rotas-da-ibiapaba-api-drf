@@ -76,18 +76,15 @@ class SocialMediaSerializer(serializers.ModelSerializer):
 
 
 class EstablishmentSerializer(serializers.ModelSerializer):
-    user = EstablishmentUserSerializer(read_only=True)
+    user = serializers.DictField(write_only=True)
     location = LocationSerializer()
-    social_media = SocialMediaSerializer()
-
-    # INPUT
+    social_media = SocialMediaSerializer(required=False)
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
         many=True,
         write_only=True
     )
 
-    # OUTPUT
     categories = CategorySerializer(
         many=True,
         read_only=True,
@@ -101,10 +98,10 @@ class EstablishmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Establishment
         fields = [
-            'id', 'user', 'name', 'description', 'cnpj',
+            'id', 'user',
+            'name', 'description', 'cnpj',
             'social_media', 'location',
-            'category',
-            'categories',
+            'category', 'categories',
             'pix_key',
             'profile_photo', 'gallery_photos', 'product_photos'
         ]
@@ -133,11 +130,23 @@ class EstablishmentSerializer(serializers.ModelSerializer):
         social_media_data = validated_data.pop('social_media', None)
         category_ids = validated_data.pop('category')
 
+        email = user_data.get('email')
+        password = user_data.get('password')
         base_name = validated_data.get('name', 'estabelecimento')
         username = GenerateUniqueName().generate_unique_username(base_name)
-        user_data['username'] = username
 
-        user = EstablishmentCreateSerializer().create(validated_data=user_data)
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({'email': 'Este e-mail já está em uso.'})
+
+        user = User.objects.create_user(
+            email=email,
+            username=username,
+            password=password,
+            type='establishment',
+            is_staff=False,
+            is_superuser=False
+        )
+
         location = Location.objects.create(**location_data)
 
         social_media = None
@@ -152,8 +161,8 @@ class EstablishmentSerializer(serializers.ModelSerializer):
         )
 
         establishment.category.set(category_ids)
-
         return establishment
+
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', None)
