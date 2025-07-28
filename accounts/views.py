@@ -1,6 +1,13 @@
+from rest_framework import status
+from rest_framework.exceptions import (
+    AuthenticationFailed,
+    PermissionDenied,
+    ValidationError,
+)
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+
 from accounts.models import Establishment, User
 from accounts.serializers import EstablishmentSerializer, AdminCreateSerializer
 from authentication.authentication import CookieJWTAuthentication
@@ -99,23 +106,63 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         try:
-            establishment = Establishment.objects.get(user=self.request.user)
-            return establishment
+            pk = self.kwargs.get("pk")
+
+            if self.request.user.id != pk:
+                raise PermissionDenied(
+                    detail="Você não tem permissão para acessar os dados de outro usuário.",
+                    code=status.HTTP_403_FORBIDDEN,
+                )
+
+            user = User.objects.get(id=pk)
+            establishment = Establishment.objects.get(user=user)
+
+            return Response(
+                {
+                    "message": "Estabelecimento encontrado com sucesso.",
+                    "success": True,
+                    "data": establishment,
+                },
+                status=status.HTTP_200_OK,
+            )
 
         except User.DoesNotExist:
-            raise NotFound(
-                detail="Usuário não encontrado.",
-                code=HTTP_400_BAD_REQUEST
+            return Response(
+                {
+                    "message": "Estabelecimento não encontrado.",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        except Establishment.DoesNotExist:
-            raise NotFound(
-                detail="Estabelecimento não encontrado para este usuário.",
-                code=HTTP_400_BAD_REQUEST
-            )
+        # except Establishment.DoesNotExist:
+        #     return Response(
+        #         {
+        #             "message": "Estabelecimento não encontrado para este usuário.",
+        #             "success": False,
+        #             "data": None,
+        #         },
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
         except AuthenticationFailed as auth_error:
-            raise auth_error
+            return Response(
+                {
+                    "message": f"Erro de autenticação - {str(auth_error)}",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         except PermissionDenied as permission_error:
-            raise permission_error
+            return Response(
+                {
+                    "message": f"Permissão negada - {str(permission_error)}",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
     def put(self, request, *args, **kwargs):
         try:
