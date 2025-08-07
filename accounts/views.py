@@ -117,16 +117,45 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         except Establishment.DoesNotExist:
             raise NotFound(detail="Estabelecimento não encontrado para este usuário.")
 
+            return Response(
+                {
+                    "message": "Estabelecimento encontrado com sucesso.",
+                    "success": True,
+                    "data": establishment,
+                },
+                status=status.HTTP_200_OK,
+            )
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
+        except User.DoesNotExist:
+            return Response(
+                {
+                    "message": "Estabelecimento não encontrado.",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response({
-            "message": "Estabelecimento encontrado com sucesso.",
-            "success": True,
-            "data": serializer.data,
-        }, status=status.HTTP_200_OK)
+        except AuthenticationFailed as auth_error:
+            return Response(
+                {
+                    "message": f"Erro de autenticação - {str(auth_error)}",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        except PermissionDenied as permission_error:
+            return Response(
+                {
+                    "message": f"Permissão negada - {str(permission_error)}",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
 
     def put(self, request, *args, **kwargs):
         try:
