@@ -119,15 +119,7 @@ class DetailEstablishment(RetrieveAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # except Establishment.DoesNotExist:
-        #     return Response(
-        #         {
-        #             "message": "Estabelecimento não encontrado para este usuário.",
-        #             "success": False,
-        #             "data": None,
-        #         },
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
+
         except AuthenticationFailed as auth_error:
             return Response(
                 {
