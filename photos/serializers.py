@@ -26,7 +26,8 @@ class PhotoSerializer(serializers.ModelSerializer):
 
         if value.size > 5 * 1024 * 1024:
             raise serializers.ValidationError(
-                "A imagem deve ter no máximo 2MB.")
+                "O tamanho da imagem não pode exceder 5MB. Por favor, escolha um arquivo menor."
+            )
 
         return value
 
