@@ -3,9 +3,11 @@ from rest_framework.exceptions import (
     AuthenticationFailed,
     PermissionDenied,
     ValidationError,
+    NotFound,
 )
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
 from accounts.models import Establishment, User
@@ -15,6 +17,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied, Authentication
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST
 )
+
 from rest_framework import status
 
 
@@ -105,17 +108,14 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     authentication_classes = [CookieJWTAuthentication]
 
     def get_object(self):
+        user = self.request.user  
+
         try:
-            pk = self.kwargs.get("pk")
-
-            if self.request.user.id != pk:
-                raise PermissionDenied(
-                    detail="Você não tem permissão para acessar os dados de outro usuário.",
-                    code=status.HTTP_403_FORBIDDEN,
-                )
-
-            user = User.objects.get(id=pk)
             establishment = Establishment.objects.get(user=user)
+            return establishment
+
+        except Establishment.DoesNotExist:
+            raise NotFound(detail="Estabelecimento não encontrado para este usuário.")
 
             return Response(
                 {
@@ -156,12 +156,11 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+
     def put(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-            serializer = self.get_serializer(
-                instance, data=request.data, partial=True)
-
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
 
@@ -193,9 +192,7 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
             return Response({
                 "message": {
                     "title": "Usuário excluído com sucesso",
-                    "text": "Os dados do usuário serão excluidos de forma " +
-                    "permanente em 30 dias. Caso queira reabrir a conta, entre " +
-                    "em contato com nosso suporte. Abraços NexTech!",
+                    "text": "Os dados do usuário serão excluídos de forma permanente em 30 dias. Caso queira reabrir a conta, entre em contato com nosso suporte. Abraços NexTech!",
                 },
                 "success": True,
                 "status": status.HTTP_204_NO_CONTENT,
@@ -212,6 +209,8 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
                 "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "data": []
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 class AdminListCreateView(ListCreateAPIView):

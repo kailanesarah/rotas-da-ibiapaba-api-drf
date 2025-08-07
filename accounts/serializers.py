@@ -8,43 +8,6 @@ from accounts.utils import GenerateUniqueName
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 
-class AdminCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'email', 'username', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        user = User.objects.create_superuser(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            type='admin'
-        )
-        return user
-
-
-class EstablishmentCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'email', 'password']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
-    def create(self, validated_data):
-        user = User(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            type='establishment',
-            is_staff=False,
-            is_superuser=False
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
-
-
 class EstablishmentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -56,7 +19,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Photo
-        fields = [ 'image', 'alt_text']
+        fields = ['image', 'alt_text']
         read_only_fields = ['id']
 
 
@@ -76,7 +39,9 @@ class SocialMediaSerializer(serializers.ModelSerializer):
 
 
 class EstablishmentSerializer(serializers.ModelSerializer):
-    user = serializers.DictField(write_only=True)
+    user = serializers.DictField(write_only=True)  # usado na criação
+    user_info = EstablishmentUserSerializer(source='user', read_only=True)  # usado nas respostas
+
     location = LocationSerializer()
     social_media = SocialMediaSerializer(required=False)
     category = serializers.PrimaryKeyRelatedField(
@@ -98,7 +63,7 @@ class EstablishmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Establishment
         fields = [
-            'id', 'user',
+            'id', 'user', 'user_info',
             'name', 'description', 'cnpj',
             'social_media', 'location',
             'category', 'categories',
@@ -163,7 +128,6 @@ class EstablishmentSerializer(serializers.ModelSerializer):
         establishment.category.set(category_ids)
         return establishment
 
-
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', None)
         location_data = validated_data.pop('location', None)
@@ -223,3 +187,41 @@ class EstablishmentSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class AdminCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_superuser(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            type='admin'
+        )
+        return user
+
+
+class EstablishmentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        username = GenerateUniqueName().generate_unique_username(validated_data.get('email', 'estabelecimento'))
+        user = User(
+            email=validated_data['email'],
+            username=username,
+            type='establishment',
+            is_staff=False,
+            is_superuser=False
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
