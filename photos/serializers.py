@@ -37,3 +37,4 @@ class PhotoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"Tipo de foto inválido. Deve ser um dos: {allowed}")
         return value
+    
