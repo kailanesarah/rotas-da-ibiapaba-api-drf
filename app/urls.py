@@ -13,6 +13,5 @@ urlpatterns = [
     path('api/v1/photos/', include('photos.urls')),
     path('health/', health_check, name='health_check'),
 ]
-
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
