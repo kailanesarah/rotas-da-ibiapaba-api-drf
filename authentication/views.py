@@ -20,7 +20,7 @@ from authentication.services.password_reset_services import PasswordResetService
 from authentication.services.tokens_services import TokenService
 from authentication.services.verification_services import VerificationService
 
-from accounts.serializers import EstablishmentSerializer
+from accounts.serializers.establishment_serializer import EstablishmentCreateUpdateSerializer
 from accounts.models import Establishment, User
 
 # instancias
@@ -65,7 +65,7 @@ class CodeValidatorView(APIView):
 
                 # User: Estabelecimento
                 if establishment:
-                    establishment_serializer = EstablishmentSerializer(
+                    establishment_serializer = EstablishmentCreateUpdateSerializer(
                         establishment)
                     response.data = {
                         'success': 'Usuário autenticado com sucesso!',

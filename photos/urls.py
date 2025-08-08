@@ -6,4 +6,6 @@ from photos.views import ProfilePhotoUploadView, GalleryPhotoUploadView
 urlpatterns = [
     path('profile-photo/upload/', ProfilePhotoUploadView.as_view(), name='upload_profile'),
     path('galery-photo/upload/', GalleryPhotoUploadView.as_view(), name='upload_galery'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

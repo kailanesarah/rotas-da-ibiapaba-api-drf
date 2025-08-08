@@ -91,7 +91,7 @@ class GalleryPhotoUploadView(APIView):
                 {
                     "message": f"{len(photos_created)} fotos da galeria enviadas com sucesso.",
                     "type": "gallery",
-                    "url_photos": url_photos,
+                    "url_photos": photo.image.url,
                 },
                 status=status.HTTP_201_CREATED,
             )
