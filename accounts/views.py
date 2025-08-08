@@ -11,9 +11,10 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.response import Response
 
 from accounts.models import Establishment, User
-from accounts.serializers import EstablishmentSerializer, AdminCreateSerializer
+from accounts.serializers.users_serializer import AdminUserCreateSerializer
+from accounts.serializers.establishment_serializer import EstablishmentCreateUpdateSerializer
 from authentication.authentication import CookieJWTAuthentication
-from rest_framework.exceptions import NotFound, PermissionDenied, AuthenticationFailed, ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST
 )
@@ -24,7 +25,7 @@ from rest_framework import status
 class EstablishmentListCreateView(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Establishment.objects.all()
-    serializer_class = EstablishmentSerializer
+    serializer_class = EstablishmentCreateUpdateSerializer
     authentication_classes = [CookieJWTAuthentication]
 
     def get_permissions(self):
@@ -104,7 +105,7 @@ class EstablishmentListCreateView(ListCreateAPIView):
 class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Establishment.objects.all()
-    serializer_class = EstablishmentSerializer
+    serializer_class = EstablishmentCreateUpdateSerializer
     authentication_classes = [CookieJWTAuthentication]
 
     def get_object(self):
@@ -117,16 +118,45 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         except Establishment.DoesNotExist:
             raise NotFound(detail="Estabelecimento não encontrado para este usuário.")
 
+            return Response(
+                {
+                    "message": "Estabelecimento encontrado com sucesso.",
+                    "success": True,
+                    "data": establishment,
+                },
+                status=status.HTTP_200_OK,
+            )
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
+        except User.DoesNotExist:
+            return Response(
+                {
+                    "message": "Estabelecimento não encontrado.",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response({
-            "message": "Estabelecimento encontrado com sucesso.",
-            "success": True,
-            "data": serializer.data,
-        }, status=status.HTTP_200_OK)
+        except AuthenticationFailed as auth_error:
+            return Response(
+                {
+                    "message": f"Erro de autenticação - {str(auth_error)}",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        except PermissionDenied as permission_error:
+            return Response(
+                {
+                    "message": f"Permissão negada - {str(permission_error)}",
+                    "success": False,
+                    "data": None,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
 
     def put(self, request, *args, **kwargs):
         try:
@@ -187,7 +217,7 @@ class RetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 class AdminListCreateView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     queryset = User.objects.filter(type='admin')
-    serializer_class = AdminCreateSerializer
+    serializer_class = AdminUserCreateSerializer
     authentication_classes = [CookieJWTAuthentication]
 
     def get_permissions(self):
