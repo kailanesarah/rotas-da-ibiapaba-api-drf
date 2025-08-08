@@ -1,15 +1,29 @@
-from django.utils.text import slugify
-from accounts.models import User
 import os
+from django.utils.text import slugify
+from django.conf import settings
+from accounts.models import User
+import shortuuid
+
+
+class IDGenerator:
+    @staticmethod
+    def gerar_id_amigavel(tamanho=8):
+        su = shortuuid.ShortUUID(
+            alphabet="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        )
+        return su.random(length=tamanho)
 
 
 class RelatedFieldExtractorAdmin:
-    def get_field(self, obj, name_field):
-        related_manager = getattr(obj, name_field)
-        if hasattr(related_manager, 'all'):
+    @staticmethod
+    def get_field(obj, name_field):
+        related_manager = getattr(obj, name_field, None)
+        if related_manager and hasattr(related_manager, 'all'):
             return ", ".join([str(item) for item in related_manager.all()])
+        return ""
 
-class GenerateUniqueName:
+
+class UniqueUsernameGenerator:
     @staticmethod
     def generate_unique_username(base_name):
         username = slugify(base_name).replace('-', '_')
@@ -22,14 +36,17 @@ class GenerateUniqueName:
                 raise ValueError("Não foi possível gerar um username único")
         return username
 
-    def rename_establishment_folders(instance_pk, old_username, new_username):
+
+class EstablishmentFolderRenamer:
+    @staticmethod
+    def rename_folders(instance_pk, old_username, new_username):
         if not old_username or old_username == new_username:
             return
 
         old_folder_name = f"{instance_pk}_{old_username}"
         new_folder_name = f"{instance_pk}_{new_username}"
 
-        base_media_path = 'photos'
+        base_media_path = os.path.join(settings.MEDIA_ROOT, 'photos')
         folders = ['profile', 'gallery', 'product', 'others']
 
         for folder in folders:
@@ -46,3 +63,30 @@ class GenerateUniqueName:
                     print(f"A pasta destino {new_path} já existe. Renomeação não feita.")
             else:
                 print(f"Pasta {old_path} não encontrada. Nada foi feito.")
+
+
+from django.utils.text import slugify
+from django.contrib.auth import get_user_model
+
+class UsernameUtils:
+    @staticmethod
+    def update_rename_folder(instance, old_name: str, new_name: str):
+        if new_name and new_name != old_name:
+            slugified_name = slugify(new_name).replace('-', '_')
+            new_username = slugified_name
+
+            UserModel = get_user_model()
+            original_username = new_username
+            counter = 1
+            while UserModel.objects.filter(username=new_username).exclude(pk=instance.user.pk).exists():
+                new_username = f"{original_username}_{counter}"
+                counter += 1
+
+            instance.user.username = new_username
+            instance.user.save()
+
+            EstablishmentFolderRenamer.rename_folders(
+                instance.pk,
+                old_username=old_name,
+                new_username=new_username
+            )
