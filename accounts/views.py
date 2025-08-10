@@ -108,12 +108,17 @@ class EstablishmentListCreateView(ListCreateAPIView):
 
 
 class EstablishmentRetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    """
+    View para recuperar, atualizar ou deletar o estabelecimento do usuário autenticado.
+    """
+
     permission_classes = (IsAuthenticated,)
     queryset = Establishment.objects.all()
     serializer_class = EstablishmentCreateUpdateSerializer
     authentication_classes = [CookieJWTAuthentication]
 
     def get_object(self):
+        """Retorna o estabelecimento associado ao usuário autenticado."""
         user = self.request.user
 
         try:
