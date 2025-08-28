@@ -18,9 +18,9 @@ class Command(BaseCommand):
         User.objects.filter(is_superuser=False).delete()
 
         # Criação de categorias
-        category_hotel = Category.objects.create(name="Hotel")
-        category_restaurant = Category.objects.create(name="Restaurante")
-        category_tourist_spot = Category.objects.create(name="Ponto Turístico")
+        category_hotel = Category.objects.create(id=1, name="Hotel")
+        category_restaurant = Category.objects.create(id=2, name="Restaurante")
+        category_tourist_spot = Category.objects.create(id=3, name="Ponto Turístico")
 
         self.stdout.write("Categorias criadas com sucesso.")
 
