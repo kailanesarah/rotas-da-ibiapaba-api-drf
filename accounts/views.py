@@ -122,48 +122,29 @@ class EstablishmentRetrieveUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         user = self.request.user
 
         try:
-            establishment = Establishment.objects.get(user=user)
-            return Response(
-                {
-                    "message": "Estabelecimento encontrado com sucesso.",
-                    "success": True,
-                    "data": establishment,
-                },
-                status=HTTP_200_OK,
-            )
+            return Establishment.objects.get(user=user)
 
         except Establishment.DoesNotExist:
             raise NotFound(detail="Estabelecimento não encontrado para este usuário.")
 
-        except User.DoesNotExist:
-            return Response(
-                {
-                    "message": "Estabelecimento não encontrado.",
-                    "success": False,
-                    "data": None,
-                },
-                status=HTTP_400_BAD_REQUEST,
-            )
-
+        # não é necessário User.DoesNotExist, pq request.user SEMPRE existe (mesmo se anon)
         except AuthenticationFailed as auth_error:
-            return Response(
-                {
-                    "message": f"Erro de autenticação - {str(auth_error)}",
-                    "success": False,
-                    "data": None,
-                },
-                status=HTTP_401_UNAUTHORIZED,
-            )
+            raise AuthenticationFailed(detail=f"Erro de autenticação - {str(auth_error)}")
 
         except PermissionDenied as permission_error:
-            return Response(
-                {
-                    "message": f"Permissão negada - {str(permission_error)}",
-                    "success": False,
-                    "data": None,
-                },
-                status=HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied(detail=f"Permissão negada - {str(permission_error)}")
+
+    def retrieve(self, request, *args, **kwargs):
+        establishment = self.get_object()
+        serializer = self.get_serializer(establishment)
+        return Response(
+            {
+                "message": "Estabelecimento encontrado com sucesso.",
+                "success": True,
+                "data": serializer.data,
+            },
+            status=HTTP_200_OK,
+        )
 
     def put(self, request, *args, **kwargs):
         try:
