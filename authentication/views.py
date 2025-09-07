@@ -1,27 +1,27 @@
-from rest_framework import status
 from django.contrib.auth import login, logout
+from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
-
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
-    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_404_NOT_FOUND,
 )
 from rest_framework.views import APIView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
+from accounts.models import Establishment, User
+from accounts.serializers.establishment_serializer import (
+    EstablishmentCreateUpdateSerializer,
+)
 from authentication.authentication import CookieJWTAuthentication
 from authentication.services.cookie_service import CookieService
 from authentication.services.email_services import EmailService
 from authentication.services.password_reset_services import PasswordResetService
 from authentication.services.tokens_services import TokenService
 from authentication.services.verification_services import VerificationService
-
-from accounts.serializers.establishment_serializer import EstablishmentCreateUpdateSerializer
-from accounts.models import Establishment, User
 
 # instancias
 token_service = TokenService()
@@ -50,8 +50,8 @@ class CodeValidatorView(APIView):
             )
             if code_verification_result == 0:
                 return Response(
-                    {'error': 'Código incorreto, tente novamente'},
-                    status=status.HTTP_401_UNAUTHORIZED
+                    {"error": "Código incorreto, tente novamente"},
+                    status=status.HTTP_401_UNAUTHORIZED,
                 )
 
             try:
@@ -61,48 +61,48 @@ class CodeValidatorView(APIView):
                 refresh_token = tokens["refresh"]
 
                 # Cria resposta vazia
-                response = Response(status=200)
+                response = Response(status=HTTP_200_OK)
 
                 # User: Estabelecimento
                 if establishment:
                     establishment_serializer = EstablishmentCreateUpdateSerializer(
-                        establishment)
+                        establishment
+                    )
                     response.data = {
-                        'success': 'Usuário autenticado com sucesso!',
-                        'user_type': 'establishment',
-                        'user': establishment_serializer.data
+                        "success": "Usuário autenticado com sucesso!",
+                        "user_type": "establishment",
+                        "user": establishment_serializer.data,
                     }
                 else:
                     # User:Admin
-                    if hasattr(user, 'type'):
+                    if hasattr(user, "type"):
                         response.data = {
-                            'success': 'Usuário autenticado com sucesso!',
-                            'user_type': user.type,
-                            'user': {
-                                'id': user.id,
-                                'email': user.email
-                            }
+                            "success": "Usuário autenticado com sucesso!",
+                            "user_type": user.type,
+                            "user": {"id": user.id, "email": user.email},
                         }
 
                 # Cria cookies para os tokens
                 cookie_service.create_cookie(
-                    response, 'access_token', access_token, 7 * 24 * 60 * 60)
+                    response, "access_token", access_token, 7 * 24 * 60 * 60
+                )
                 cookie_service.create_cookie(
-                    response, 'refresh_token', refresh_token, 7 * 24 * 60 * 60)
+                    response, "refresh_token", refresh_token, 7 * 24 * 60 * 60
+                )
 
                 return response
 
             except KeyError as e:
                 return Response(
-                    {'error': f'Token não encontrado na resposta: {str(e)}'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    {"error": f"Token não encontrado na resposta: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
         except Exception as e:
-            return Response({
-                'error': 'Erro na tentativa de validar o código',
-                'detail': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Erro na tentativa de validar o código", "detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class LoginView(APIView):
@@ -131,18 +131,29 @@ class LoginView(APIView):
 
                 return Response(
                     {
-                        "message": "Código enviado para seu e-mail. Verifique para continuar."
+                        "message": "Código enviado para seu e-mail. Verifique para continuar.",
+                        "success": True,
+                        "data": None,
                     },
                     status=HTTP_200_OK,
                 )
 
             return Response(
-                {"error": "Credenciais inválidas"}, status=HTTP_401_UNAUTHORIZED
+                {
+                    "message": "Credenciais inválidas. Tente novamente.",
+                    "success": False,
+                    "data": None,
+                },
+                status=HTTP_401_UNAUTHORIZED,
             )
 
         except Exception as e:
             return Response(
-                {"error": "Erro ao fazer login", "detail": str(e)},
+                {
+                    "message": "Erro ao processar a requisição de login.",
+                    "success": False,
+                    "data": None,
+                },
                 status=HTTP_400_BAD_REQUEST,
             )
 
@@ -154,7 +165,12 @@ class LogoutView(APIView):
     def post(self, request):
         try:
             response = Response(
-                {"success": "Logout realizado com sucesso"}, status=HTTP_200_OK
+                {
+                    "message": "Logout realizado com sucesso",
+                    "success": True,
+                    "data": None,
+                },
+                status=HTTP_200_OK,
             )
             response.delete_cookie("access_token")
             response.delete_cookie("refresh_token")
@@ -162,7 +178,11 @@ class LogoutView(APIView):
             return response
         except Exception as e:
             return Response(
-                {"error": "Erro ao fazer logout", "detail": str(e)},
+                {
+                    "message": "Erro ao processar a requisição de logout.",
+                    "success": False,
+                    "data": None,
+                },
                 status=HTTP_400_BAD_REQUEST,
             )
 
@@ -195,13 +215,21 @@ class PasswordResetView(APIView):
             email_service.send_email(subject, body, user.email)
 
             return Response(
-                {"sucesso": "Solicitação de reset feita com sucesso"},
+                {
+                    "message": f"Link de redefinição de senha enviado para o e-mail: {user.email}",
+                    "success": True,
+                    "data": None,
+                },
                 status=HTTP_200_OK,
             )
 
         except Exception as e:
             return Response(
-                {"error": "Erro ao processar solicitação", "detail": str(e)},
+                {
+                    "message": "Erro ao processar a requisição de redefinição de senha.",
+                    "success": False,
+                    "data": None,
+                },
                 status=HTTP_400_BAD_REQUEST,
             )
 
@@ -229,12 +257,20 @@ class PasswordResetConfirmView(APIView):
             user.save()
 
             return Response(
-                {"message": f"Senha redefinida com sucesso para o usuário: {email}"},
+                {
+                    "message": f"Senha redefinida com sucesso para o usuário: {email}",
+                    "success": True,
+                    "data": None,
+                },
                 status=HTTP_200_OK,
             )
         except Exception as e:
             return Response(
-                {"error": "Erro ao processar a requisição", "detail": str(e)},
+                {
+                    "message": "Erro ao redefinir a senha.",
+                    "success": False,
+                    "data": None,
+                },
                 status=HTTP_400_BAD_REQUEST,
             )
 
@@ -262,82 +298,114 @@ class ResendCodeView(APIView):
             )
 
             email_service.send_email(subject, body, user.email)
-            return Response({'message': f'Código reenviado com sucesso para o usuário: {email_user}'}, status=HTTP_200_OK)
+            return Response(
+                {
+                    "message": f"Código reenviado com sucesso para o usuário: {email_user}",
+                    "success": True,
+                    "data": None,
+                },
+                status=HTTP_200_OK,
+            )
 
         except Exception as e:
 
-            return Response({'error': 'Erro ao processar a requisição', 'detail': str(e)}, status=HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "message": "Erro ao processar a requisição de reenvio do código.",
+                    "success": False,
+                    "data": None,
+                },
+                status=HTTP_400_BAD_REQUEST,
+            )
 
 
 class TokenRefreshView(APIView):
     def post(self, request):
         try:
-            refresh_token = request.COOKIES.get('refresh_token')
+            refresh_token = request.COOKIES.get("refresh_token")
 
             if not refresh_token:
-                raise AuthenticationFailed('Refresh token não encontrado.')
+                raise AuthenticationFailed("Refresh token não encontrado.")
 
-            serializer = TokenRefreshSerializer(
-                data={'refresh': refresh_token})
+            serializer = TokenRefreshSerializer(data={"refresh": refresh_token})
             serializer.is_valid(raise_exception=True)
 
-            new_access_token = serializer.validated_data['access']
-            new_refresh_token = serializer.validated_data['refresh']
+            new_access_token = serializer.validated_data["access"]
+            new_refresh_token = serializer.validated_data["refresh"]
 
             # Cria resposta padrão
             response = Response(status=200)
 
             # Define novos cookies
             cookie_service.create_cookie(
-                response, 'access_token', new_access_token, 7 * 24 * 60 * 60
+                response, "access_token", new_access_token, 7 * 24 * 60 * 60
             )
             cookie_service.create_cookie(
-                response, 'refresh_token', new_refresh_token, 7 * 24 * 60 * 60
+                response, "refresh_token", new_refresh_token, 7 * 24 * 60 * 60
             )
 
             # Recupera usuário dono do refresh token
             user = TokenService.get_user_from_refresh_token(new_refresh_token)
 
             # User: Admin
-            if hasattr(user, 'type') and user.type == 'admin':
+            if hasattr(user, "type") and user.type == "admin":
                 response.data = {
-                    'success': 'Tokens atualizados',
-                    'user_type': 'admin',
-                    'user': {
-                        'id': user.id,
-                        'username': user.username,
-                        'email': user.email,
-                    }
+                    "success": "Tokens atualizados",
+                    "user_type": "admin",
+                    "user": {
+                        "id": user.id,
+                        "username": user.username,
+                        "email": user.email,
+                    },
                 }
                 return response
 
             # User: Estabelecimento
-            elif hasattr(user, 'name'):
+            elif hasattr(user, "name"):
                 try:
                     establishment_serializer = EstablishmentSerializer(user)
                     response.data = {
-                        'success': 'Tokens atualizados',
-                        'user_type': 'establishment',
-                        'user': establishment_serializer.data
+                        "success": "Tokens atualizados",
+                        "user_type": "establishment",
+                        "user": establishment_serializer.data,
                     }
                     return response
                 except Establishment.DoesNotExist:
                     return Response(
-                        {'error': 'Estabelecimento não encontrado para este usuário.'},
-                        status=404
+                        {
+                            "message": "Estabelecimento não encontrado para este usuário.",
+                            "success": False,
+                            "data": None,
+                        },
+                        status=HTTP_404_NOT_FOUND,
                     )
 
             # Se tipo não reconhecido
             return Response(
-                {'error': 'Tipo de usuário não reconhecido'},
-                status=400
+                {
+                    "message": "Tipo de usuário não reconhecido.",
+                    "success": False,
+                    "data": None,
+                },
+                status=HTTP_400_BAD_REQUEST,
             )
 
         except AuthenticationFailed as e:
-            return Response({'error': str(e)}, status=HTTP_401_UNAUTHORIZED)
+            return Response(
+                {
+                    "message": "Falha na autenticação. Por favor, faça login novamente.",
+                    "success": False,
+                    "data": None,
+                },
+                status=HTTP_401_UNAUTHORIZED,
+            )
 
         except Exception as e:
             return Response(
-                {'error': 'Erro ao atualizar tokens', 'detail': str(e)},
-                status=HTTP_400_BAD_REQUEST
+                {
+                    "message": "Erro ao processar a requisição de atualização de tokens.",
+                    "success": False,
+                    "data": None,
+                },
+                status=HTTP_400_BAD_REQUEST,
             )
