@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from authentication.services.email_services import EmailService
+from authentication.services.emails.email_services import EmailService
 
 
 @pytest.mark.integration

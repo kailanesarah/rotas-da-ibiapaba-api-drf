@@ -1,0 +1,38 @@
+[flake8]
+# Diretórios a serem analisados
+exclude =
+    .git,
+    __pycache__,
+    migrations,
+    settings,
+    env,
+    venv,
+    .venv,
+    static,
+    media
+
+max-line-length = 88
+
+
+ignore =
+    E203,  
+    E266,  
+    E501,  
+    W503,  
+    E731,  
+    F401,  
+    F403,  
+    F405,  
+    C901,  
+    ANN101,  
+    ANN102,  
+    D100, D101, D102, D103, D104, D105, D106, D107,  
+
+statistics = True
+show-source = True
+count = True
+
+
+per-file-ignores =
+    __init__.py: F401,F403
+    */migrations/*.py: E501,F401

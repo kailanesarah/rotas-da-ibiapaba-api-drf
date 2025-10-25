@@ -4,7 +4,7 @@ from django.core.cache import cache
 from rest_framework import status
 from rest_framework.response import Response
 
-from authentication.services.verification_services import VerificationService
+from authentication.services.auth.verification_services import VerificationService
 
 User = get_user_model()
 

@@ -1,6 +1,6 @@
 import pytest
 
-from authentication.services.password_reset_services import PasswordResetService
+from authentication.services.auth.password_reset_services import PasswordResetService
 
 
 @pytest.mark.unit

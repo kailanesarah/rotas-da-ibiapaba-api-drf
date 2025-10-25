@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
 
-from authentication.services.tokens_services import TokenService
+from authentication.services.auth.tokens.tokens_services import TokenService
 
 User = get_user_model()
 

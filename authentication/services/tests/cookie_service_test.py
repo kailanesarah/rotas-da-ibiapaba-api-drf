@@ -2,7 +2,7 @@ import pytest
 from django.conf import settings as django_settings
 from django.http import HttpResponse
 
-from authentication.services.cookie_service import CookieService
+from authentication.services.auth.cookies.cookie_service import CookieService
 
 
 @pytest.mark.unit
